@@ -206,6 +206,44 @@
   line-height: 1.5;
 }
 
+/* Seat roster shown on each counsel type card */
+.empty-cta-card-seats {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.empty-cta-card-seats li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.seat-role {
+  font-size: 11px;
+  color: var(--mm-cream);
+  font-weight: 600;
+  font-family: var(--font-body);
+  flex: 1;
+  min-width: 0;
+}
+
+.seat-focus {
+  font-size: 10px;
+  color: var(--mm-orange);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .empty-models-line {
   position: relative;
   font-size: 12px;

@@ -193,6 +193,16 @@ export default function BoardroomStage({
                   >
                     <div className="empty-cta-card-label">{c.label}</div>
                     <div className="empty-cta-card-desc">{c.description}</div>
+                    {c.seats && c.seats.length > 0 && (
+                      <ul className="empty-cta-card-seats">
+                        {c.seats.map((s, i) => (
+                          <li key={i}>
+                            <span className="seat-role">{s.role}</span>
+                            <span className="seat-focus">{s.focus}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </button>
                 ))}
               </div>
