@@ -580,15 +580,14 @@
   padding: 24px 28px 12px;
 }
 
-/* ── Follow-up bar ── */
+/* ── Follow-up bar ── always at the bottom of the stage, never mid-scroll */
 .followup-bar {
-  position: sticky;
-  bottom: 0;
   display: flex;
   gap: 10px;
-  padding: 14px 0 8px;
-  margin-top: 12px;
+  padding: 12px 28px 16px;
+  flex-shrink: 0;
   background: linear-gradient(to top, var(--bg) 70%, rgba(0, 0, 34, 0));
+  border-top: 1px solid var(--border);
 }
 
 .followup-input {

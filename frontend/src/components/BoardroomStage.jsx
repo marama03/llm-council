@@ -394,8 +394,13 @@ export default function BoardroomStage({
             />
           ))}
           <div ref={resultsEndRef} />
+        </div>
+      )}
 
-          {/* Follow-up bar */}
+      {/* Follow-up bar — always anchored to bottom of stage, never mid-scroll */}
+      {hasTurns && (
+        <>
+          {error && <div className="board-error board-error-bottom">{error}</div>}
           <form className="followup-bar" onSubmit={handleFollowup}>
             <input
               type="text"
@@ -413,9 +418,7 @@ export default function BoardroomStage({
               → Re-convene
             </button>
           </form>
-
-          {error && <div className="board-error">{error}</div>}
-        </div>
+        </>
       )}
     </div>
   );
