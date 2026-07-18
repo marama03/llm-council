@@ -247,6 +247,7 @@
   padding: 14px 24px;
   background: var(--bg-mid);
   border-bottom: 1px solid var(--border);
+  border-top: 3px solid var(--mm-orange);
   flex-shrink: 0;
   gap: 12px;
 }

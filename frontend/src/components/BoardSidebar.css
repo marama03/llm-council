@@ -2,7 +2,7 @@
   width: 290px;
   background: var(--bg-mid);
   color: var(--text-body);
-  border-right: 1px solid var(--border);
+  border-right: 2px solid var(--mm-orange);
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -23,19 +23,20 @@
 }
 
 .brand-mark {
-  width: 36px;
-  height: 36px;
-  background: var(--mm-orange);
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--mm-orange) 0%, var(--mm-orange-2) 100%);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 900;
   color: var(--mm-white);
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   flex-shrink: 0;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
+  box-shadow: 0 4px 14px rgba(239, 65, 36, 0.4);
 }
 
 .brand-title {
@@ -231,7 +232,10 @@
   padding: 12px 16px;
   border-top: 1px solid var(--border);
   font-size: 10px;
-  color: var(--text-faint);
+  color: var(--mm-orange);
   text-align: center;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-family: var(--font-body);
 }

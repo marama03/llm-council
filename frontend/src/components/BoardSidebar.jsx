@@ -24,7 +24,7 @@ export default function BoardSidebar({
     <div className="board-sidebar">
       <div className="board-sidebar-header">
         <div className="brand">
-          <div className="brand-mark">M</div>
+          <div className="brand-mark">MM</div>
           <div>
             <div className="brand-title">The Council</div>
             <div className="brand-sub">by Marama Marketing</div>

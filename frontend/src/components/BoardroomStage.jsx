@@ -28,6 +28,8 @@ export default function BoardroomStage({
 }) {
   const [question, setQuestion] = useState('');
   const [followupQuestion, setFollowupQuestion] = useState('');
+  // Hide the full config strip by default when there are already turns —
+  // user wants to see results, not the static seat list
   const [showConfig, setShowConfig] = useState(true);
   const [attachments, setAttachments] = useState([]); // [{type,name,data_url?,text?,preview?}]
   const [isDragOver, setIsDragOver] = useState(false);
