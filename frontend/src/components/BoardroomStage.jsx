@@ -44,20 +44,19 @@ export default function BoardroomStage({
       <div className="boardroom-stage">
         <div className="boardroom-empty">
           <div className="empty-emblem">The Council</div>
-          <h1>Six different models.<br /><span>One decisive answer.</span></h1>
-          <p className="empty-tagline">Not one model wearing six masks.</p>
+          <h1>Five different models.<br /><span>One decisive answer.</span></h1>
+          <p className="empty-tagline">Not one model wearing five masks.</p>
 
           {/* Radial ring — blending OLD circular visualization */}
           <div className="empty-circle-diagram">
             <div className="empty-circle-ring" />
             <div className="empty-circle-ring ring-2" />
             {[
-              { label: 'Grok', angle: 0 },
-              { label: 'Llama', angle: 60 },
-              { label: 'GLM', angle: 120 },
-              { label: 'DeepSeek', angle: 180 },
-              { label: 'Qwen', angle: 240 },
-              { label: 'Mistral', angle: 300 },
+              { label: 'GPT',      angle: 0 },
+              { label: 'Claude',   angle: 72 },
+              { label: 'DeepSeek', angle: 144 },
+              { label: 'Qwen',     angle: 216 },
+              { label: 'Mistral',  angle: 288 },
             ].map(({ label, angle }) => {
               const r = 88;
               const rad = ((angle - 90) * Math.PI) / 180;
@@ -75,7 +74,7 @@ export default function BoardroomStage({
           </div>
 
           <p className="empty-sub">
-            Pose a question. Six genuinely different LLMs deliberate in blind
+            Pose a question. Five genuinely different LLMs deliberate in blind
             openings, cross-examine each other, revise their stances. The
             chairman synthesizes a confidence score, a decision, and next steps.
             This is the antidote to AI psychosis.

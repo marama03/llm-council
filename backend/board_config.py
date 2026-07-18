@@ -36,19 +36,31 @@ BOARD_DATA_DIR = "data/boards"
 # ----------------------------------------------------------------------------
 # Available models (the "brains" you can drop into any seat)
 # ----------------------------------------------------------------------------
-# These are real OpenRouter identifiers. Each entry has a short display name
-# and a default voice hint used by the browser's Web Speech API for voice
-# playback. Voices are intentionally varied so the board "sounds" different.
+# These are real OpenRouter identifiers, each probed live before being listed.
+# Dead slugs (x-ai/grok-4, google/gemini-3-pro-preview) have been removed so
+# the board never silently degrades. Each entry has a short display name and a
+# default voice hint used by the browser's Web Speech API for voice playback.
+# Voices are intentionally varied so the board "sounds" different.
 AVAILABLE_MODELS = [
-    {"id": "x-ai/grok-4",                "name": "Grok",      "voice": {"lang": "en-US", "rate": 1.05, "pitch": 0.9}},
-    {"id": "meta-llama/llama-3.3-70b-instruct", "name": "Llama", "voice": {"lang": "en-GB", "rate": 0.95, "pitch": 1.0}},
-    {"id": "mistralai/mistral-large",    "name": "Mistral",   "voice": {"lang": "en-AU", "rate": 1.0,  "pitch": 1.1}},
-    {"id": "qwen/qwen3-max",             "name": "Qwen",      "voice": {"lang": "en-IN", "rate": 1.0,  "pitch": 0.95}},
-    {"id": "deepseek/deepseek-r1",       "name": "DeepSeek R1", "voice": {"lang": "en-US", "rate": 0.9, "pitch": 0.8}},
-    {"id": "z-ai/glm-4.6",               "name": "GLM",       "voice": {"lang": "en-US", "rate": 1.0,  "pitch": 1.0}},
-    {"id": "openai/gpt-5.1",             "name": "GPT",       "voice": {"lang": "en-US", "rate": 1.05, "pitch": 1.05}},
-    {"id": "google/gemini-3-pro-preview", "name": "Gemini",  "voice": {"lang": "en-GB", "rate": 1.1,  "pitch": 1.15}},
-    {"id": "anthropic/claude-sonnet-4.5", "name": "Claude",   "voice": {"lang": "en-GB", "rate": 0.95, "pitch": 0.85}},
+    {"id": "openai/gpt-5.1",                "name": "GPT",        "voice": {"lang": "en-US", "rate": 1.05, "pitch": 1.05}},
+    {"id": "anthropic/claude-sonnet-4.5",   "name": "Claude",     "voice": {"lang": "en-GB", "rate": 0.95, "pitch": 0.85}},
+    {"id": "deepseek/deepseek-r1",          "name": "DeepSeek R1","voice": {"lang": "en-US", "rate": 0.9,  "pitch": 0.8}},
+    {"id": "qwen/qwen3-max",                "name": "Qwen",       "voice": {"lang": "en-IN", "rate": 1.0,  "pitch": 0.95}},
+    {"id": "mistralai/mistral-large",       "name": "Mistral",    "voice": {"lang": "en-AU", "rate": 1.0,  "pitch": 1.1}},
+    {"id": "z-ai/glm-4.6",                  "name": "GLM",        "voice": {"lang": "en-US", "rate": 1.0,  "pitch": 1.0}},
+    {"id": "meta-llama/llama-3.3-70b-instruct", "name": "Llama",  "voice": {"lang": "en-GB", "rate": 0.95, "pitch": 1.0}},
+]
+
+# The five distinct live brains that fill the five director seats by default.
+# Each counsel type rotates these across roles so every model fills exactly
+# one seat per board. The Chairman (GLM) and Housekeeping (Gemini 2.5 Flash)
+# sit outside this set.
+DIRECTOR_MODELS = [
+    "openai/gpt-5.1",
+    "anthropic/claude-sonnet-4.5",
+    "deepseek/deepseek-r1",
+    "qwen/qwen3-max",
+    "mistralai/mistral-large",
 ]
 
 def get_model_meta(model_id: str) -> dict:
@@ -71,6 +83,9 @@ def get_model_meta(model_id: str) -> dict:
 #       focus       : a short tag shown in the UI
 #       default_model: the OpenRouter model id to drop into this seat by default
 #   - chairman_persona : persona for the chairman in this counsel
+#
+# Every counsel type ships exactly FIVE seats, each filled by a distinct live
+# brain from DIRECTOR_MODELS. No two seats share a model on the same board.
 COUNSEL_TYPES = {
     "general": {
         "key": "general",
@@ -81,13 +96,13 @@ COUNSEL_TYPES = {
                 "role": "Chief Executive Officer",
                 "focus": "Strategy & vision",
                 "persona": "You are the Chief Executive Officer of the board. You think in terms of strategic fit, market positioning, and long-term vision. You weigh opportunity against risk and rally the board toward a decisive direction.",
-                "default_model": "x-ai/grok-4",
+                "default_model": "openai/gpt-5.1",
             },
             {
                 "role": "Chief Financial Officer",
                 "focus": "Cost & ROI",
                 "persona": "You are the Chief Financial Officer of the board. You scrutinize cost, runway, ROI, and financial risk. You demand numbers and reject ideas that burn capital without a clear path to return.",
-                "default_model": "meta-llama/llama-3.3-70b-instruct",
+                "default_model": "qwen/qwen3-max",
             },
             {
                 "role": "Chief Technology Officer",
@@ -96,22 +111,16 @@ COUNSEL_TYPES = {
                 "default_model": "deepseek/deepseek-r1",
             },
             {
-                "role": "Chief Data Officer",
-                "focus": "Data & evidence",
-                "persona": "You are the Chief Data Officer of the board. You care about evidence, data quality, measurement, and what the numbers actually say. You challenge claims that lack supporting data.",
-                "default_model": "qwen/qwen3-max",
-            },
-            {
                 "role": "Chief Marketing Officer",
                 "focus": "Customer & market",
                 "persona": "You are the Chief Marketing Officer of the board. You think about the customer, positioning, narrative, and go-to-market. You ask who this is for and why they would care.",
-                "default_model": "mistralai/mistral-large",
+                "default_model": "anthropic/claude-sonnet-4.5",
             },
             {
                 "role": "Chief Risk Officer",
                 "focus": "Risk & downsides",
                 "persona": "You are the Chief Risk Officer of the board. You hunt for failure modes, second-order effects, and worst-case scenarios. You are not a pessimist - you are the board's conscience on what can go wrong.",
-                "default_model": "x-ai/grok-4",
+                "default_model": "mistralai/mistral-large",
             },
         ],
         "chairman_persona": "You are the Chairman of the Board. You run an orderly boardroom. You weigh each director's argument on its merits, note where the board agrees and disagrees, and deliver a crisp consensus the CEO can act on.",
@@ -137,25 +146,19 @@ COUNSEL_TYPES = {
                 "role": "Chief Information Security Officer",
                 "focus": "Security",
                 "persona": "You are the CISO. You evaluate security, privacy, compliance, and blast radius. You assume adversaries are smart and motivated.",
-                "default_model": "x-ai/grok-4",
+                "default_model": "openai/gpt-5.1",
             },
             {
                 "role": "Head of Data",
                 "focus": "Data & ML",
                 "persona": "You are the Head of Data. You evaluate data pipelines, model lifecycle, evals, and the cost of getting data right vs wrong.",
-                "default_model": "meta-llama/llama-3.3-70b-instruct",
+                "default_model": "anthropic/claude-sonnet-4.5",
             },
             {
                 "role": "VP Engineering",
                 "focus": "Delivery & team",
                 "persona": "You are the VP of Engineering. You think about team capability, hiring, delivery timelines, and what the team can actually ship in the next quarter.",
                 "default_model": "mistralai/mistral-large",
-            },
-            {
-                "role": "DevOps Lead",
-                "focus": "Ops & reliability",
-                "persona": "You are the DevOps Lead. You care about reliability, observability, deploy pain, and on-call burden. You have been paged at 3am.",
-                "default_model": "z-ai/glm-4.6",
             },
         ],
         "chairman_persona": "You are the Chairman of a technical review board. You cut through engineering opinion to find the decision that best balances risk, cost, and time-to-value. You are skeptical of elegance for its own sake.",
@@ -169,19 +172,19 @@ COUNSEL_TYPES = {
                 "role": "Chief Marketing Officer",
                 "focus": "Positioning",
                 "persona": "You are the CMO. You own positioning, narrative, and brand. You ask: who is this for, what problem do they have, and why us, why now?",
-                "default_model": "mistralai/mistral-large",
+                "default_model": "anthropic/claude-sonnet-4.5",
             },
             {
                 "role": "Head of Product",
                 "focus": "Product fit",
                 "persona": "You are the Head of Product. You think about user jobs-to-be-done, the smallest lovable product, and what to cut to ship sooner.",
-                "default_model": "x-ai/grok-4",
+                "default_model": "openai/gpt-5.1",
             },
             {
                 "role": "Creative Director",
                 "focus": "Story & craft",
                 "persona": "You are the Creative Director. You care about story, hook, and the emotional payoff. You hate generic copy and love a memorable angle.",
-                "default_model": "anthropic/claude-sonnet-4.5",
+                "default_model": "mistralai/mistral-large",
             },
             {
                 "role": "Growth Lead",
@@ -190,16 +193,10 @@ COUNSEL_TYPES = {
                 "default_model": "qwen/qwen3-max",
             },
             {
-                "role": "Customer Voice",
-                "focus": "The buyer",
-                "persona": "You speak as the skeptical customer. You do not care about our tech - you care about your problem and your time. You will not adopt something that is hard.",
-                "default_model": "meta-llama/llama-3.3-70b-instruct",
-            },
-            {
                 "role": "Brand Strategist",
                 "focus": "Long-term brand",
                 "persona": "You are the Brand Strategist. You think about consistency, reputation, and how this choice lands 18 months from now, not just this launch.",
-                "default_model": "google/gemini-3-pro-preview",
+                "default_model": "deepseek/deepseek-r1",
             },
         ],
         "chairman_persona": "You are the Chairman of a creative review board. You protect the work from committee-think. You look for the idea that is both true to the customer and memorable, and you are willing to overrule a majority if the majority is bland.",
@@ -213,7 +210,7 @@ COUNSEL_TYPES = {
                 "role": "Chief Executive Officer",
                 "focus": "Call the shot",
                 "persona": "You are the CEO in a crisis. You must decide and own it. You balance speed, truth, and duty to stakeholders. Indecision is itself a decision.",
-                "default_model": "x-ai/grok-4",
+                "default_model": "openai/gpt-5.1",
             },
             {
                 "role": "Chief Risk Officer",
@@ -231,12 +228,6 @@ COUNSEL_TYPES = {
                 "role": "General Counsel",
                 "focus": "Legal exposure",
                 "persona": "You are the General Counsel. You map legal and regulatory exposure, preservation duties, and what we can and cannot say. You are calm under pressure.",
-                "default_model": "meta-llama/llama-3.3-70b-instruct",
-            },
-            {
-                "role": "Chief Operating Officer",
-                "focus": "Keep the lights on",
-                "persona": "You are the COO. You keep the business running through the crisis: customers, staff, suppliers, cash. You protect the day-to-day while the crisis is handled.",
                 "default_model": "mistralai/mistral-large",
             },
             {

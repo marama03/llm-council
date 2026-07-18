@@ -61,7 +61,7 @@ export default function BoardSidebar({
         {sessions.length === 0 ? (
           <div className="no-sessions">
             <strong>No boards yet.</strong>
-            Convene your first board. Put a real decision in front of six genuinely different brains.
+            Convene your first board. Put a real decision in front of five genuinely different brains.
           </div>
         ) : (
           sessions.map((s) => (

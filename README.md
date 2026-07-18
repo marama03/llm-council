@@ -82,12 +82,12 @@ Get your API key at [openrouter.ai](https://openrouter.ai/). Make sure to purcha
 ```python
 COUNCIL_MODELS = [
     "openai/gpt-5.1",
-    "google/gemini-3-pro-preview",
     "anthropic/claude-sonnet-4.5",
-    "x-ai/grok-4",
+    "qwen/qwen3-max",
+    "mistralai/mistral-large",
 ]
 
-CHAIRMAN_MODEL = "google/gemini-3-pro-preview"
+CHAIRMAN_MODEL = "z-ai/glm-4.6"
 ```
 
 ## Running the Application
