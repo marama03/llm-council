@@ -76,8 +76,21 @@
 .cc-verdict-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 14px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Flex spacer: push dial to the right */
+.cc-verdict-row .decision-badge {
+  flex-shrink: 0;
+}
+
+.cc-verdict-row .split-badge {
+  flex-shrink: 0;
+}
+
+.cc-verdict-row .confidence-dial {
+  margin-left: auto;
 }
 
 /* Decision badge */
@@ -132,6 +145,28 @@
   letter-spacing: 0.8px;
   color: var(--mm-cream-dim);
   font-weight: 700;
+}
+
+.confidence-scorer-note {
+  font-size: 9px;
+  color: var(--mm-orange);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  opacity: 0.8;
+  cursor: help;
+}
+
+/* Split badge */
+.split-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(239, 202, 8, 0.10);
+  color: var(--mm-yellow);
+  border: 1px solid rgba(239, 202, 8, 0.28);
+  font-family: var(--font-body);
+  cursor: help;
 }
 
 /* ── Content sections ── */
@@ -276,6 +311,23 @@
   max-height: 360px;
   overflow-y: auto;
   line-height: 1.5;
+}
+
+/* Trigger conditions section */
+.cc-trigger {
+  background: rgba(239, 202, 8, 0.04);
+  border-left: 3px solid var(--mm-yellow);
+}
+
+.cc-section-label-trigger {
+  color: var(--mm-yellow) !important;
+}
+
+.cc-trigger-body {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--mm-cream);
+  white-space: pre-wrap;
 }
 
 .cc-failed-note {

@@ -16,13 +16,13 @@ each director answers the new question with the prior transcript in context,
 and the Chairman re-synthesizes a consensus.
 """
 
+import asyncio
 import json
 import re
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 
 from .openrouter import query_model, query_models_parallel
 from .board_config import get_counsel_type, get_model_meta
-from typing import Optional
 
 
 # ----------------------------------------------------------------------------
@@ -30,13 +30,15 @@ from typing import Optional
 # ----------------------------------------------------------------------------
 
 def _seat_system_prompt(seat: dict, counsel: dict) -> str:
-    """System prompt that assigns a seat its role/persona."""
+    """System prompt that assigns a seat its role/persona and rubric."""
     persona = seat.get("persona", "")
     role = seat.get("role", "Director")
     focus = seat.get("focus", "")
+    rubric = seat.get("rubric", "")
     focus_line = f" Your particular lens on every question is: {focus}." if focus else ""
+    rubric_block = f"\n\nYour scoring rubric — you MUST address each point explicitly before your conclusion:\n{rubric}" if rubric else ""
     return (
-        f"{persona}{focus_line}\n\n"
+        f"{persona}{focus_line}{rubric_block}\n\n"
         f"You are '{role}' at this board table. Stay in character. Be concrete, "
         f"be brief, and be willing to disagree. Do not hedge for the sake of "
         f"politeness - the board needs your real view, not a committee answer."
@@ -308,6 +310,96 @@ async def stage3_revised_positions(
 
 
 # ----------------------------------------------------------------------------
+# Confidence scoring — independent pass, NOT the Chairman (fix self-marking)
+# ----------------------------------------------------------------------------
+
+def _detect_split(revisions: List[Dict[str, Any]]) -> dict:
+    """Analyse revised stances to detect a meaningful dissent split.
+
+    Returns a dict with:
+      split        : True when the board is split 3-vs-2 or worse
+      majority     : list of roles on the majority side
+      dissenters   : list of roles on the minority side
+      split_label  : human-readable e.g. '3-vs-2'
+    """
+    approving = []
+    dissenting = []
+    for r in revisions:
+        stance = (r.get("revised_stance") or "UNCHANGED").upper()
+        # STRONGER / UNCHANGED => held or reinforced their position
+        # CONCEDED / FLIPPED   => moved away
+        if stance in ("STRONGER", "UNCHANGED"):
+            approving.append(r["role"])
+        else:
+            dissenting.append(r["role"])
+
+    total = len(revisions)
+    maj_count = max(len(approving), len(dissenting))
+    min_count = min(len(approving), len(dissenting))
+    is_split = min_count > 0 and (maj_count - min_count) <= 1  # 3-vs-2 or 2-vs-3
+
+    if len(approving) >= len(dissenting):
+        majority, minority = approving, dissenting
+    else:
+        majority, minority = dissenting, approving
+
+    return {
+        "split": is_split,
+        "majority": majority,
+        "dissenters": minority,
+        "split_label": f"{len(majority)}-vs-{len(minority)}" if minority else f"{len(majority)}-vs-0",
+    }
+
+
+async def _score_confidence(
+    question: str,
+    revisions: List[Dict[str, Any]],
+    board: dict,
+) -> int:
+    """Ask two non-Chair directors to independently score convergence 0-100.
+
+    The Chair does NOT participate in scoring — it only synthesizes.
+    We average the two scores to produce a single convergence figure.
+    The scorers are the first two seats; they only see the revised positions.
+    """
+    revisions_text = _render_revisions_for_chair(revisions)
+    stances = ", ".join(
+        f"{r['role']}: {r.get('revised_stance', 'UNCHANGED')}" for r in revisions
+    )
+
+    score_prompt = (
+        f"The board was asked:\n\n\"\"\"\n{question}\n\"\"\"\n\n"
+        f"Revised stances after deliberation: {stances}\n\n"
+        f"Full revised positions:\n{revisions_text}\n\n"
+        f"As a neutral observer (not the Chair, not a party to this debate), "
+        f"score the board's CONVERGENCE on a scale of 0 to 100, where:\n"
+        f"  0  = complete deadlock, no shared ground\n"
+        f"  50 = significant dissent but a workable majority\n"
+        f" 100 = unanimous, high-conviction agreement\n\n"
+        f"Reply with ONLY a single integer between 0 and 100. No explanation."
+    )
+
+    # Use the first two director seats as independent scorers
+    scorer_seats = board["seats"][:2]
+    tasks = [
+        query_model(s["model"], [{"role": "user", "content": score_prompt}])
+        for s in scorer_seats
+    ]
+    responses = await _gather(tasks)
+
+    scores = []
+    for resp in responses:
+        content = ((resp or {}).get("content") or "").strip()
+        m = re.search(r"\b(\d{1,3})\b", content)
+        if m:
+            scores.append(max(0, min(100, int(m.group(1)))))
+
+    if not scores:
+        return 70  # sensible fallback
+    return round(sum(scores) / len(scores))
+
+
+# ----------------------------------------------------------------------------
 # Stage 4 - chairman consensus
 # ----------------------------------------------------------------------------
 
@@ -321,10 +413,33 @@ async def stage4_chairman_consensus(
 ) -> Dict[str, Any]:
     """The Chairman synthesizes a consensus with a structured verdict.
 
+    Confidence is scored by two non-Chair directors BEFORE the Chair
+    synthesizes — the Chair never grades its own homework.
+
     Returns:
-        {model, raw, confidence, decision, recommendation, next_steps,
-         points_of_agreement, points_of_disagreement}
+        {model, raw, confidence, confidence_scorers, decision, recommendation,
+         next_steps, points_of_agreement, points_of_disagreement,
+         split_info}
     """
+    # -- Independent confidence scoring (non-Chair, runs in parallel with split detect) --
+    split_info = _detect_split(revisions)  # sync
+    confidence = await _score_confidence(question, revisions, board)  # async, non-Chair
+
+    # -- Build dissent trigger block for Chair prompt --
+    dissent_block = ""
+    if split_info["split"]:
+        dissenter_roles = ", ".join(split_info["dissenters"])
+        majority_roles = ", ".join(split_info["majority"])
+        dissent_block = (
+            f"\n\nIMPORTANT — SPLIT BOARD ({split_info['split_label']}): "
+            f"The majority ({majority_roles}) and the minority ({dissenter_roles}) "
+            f"did not converge. Because this is a {split_info['split_label']} split, your "
+            f"consensus MUST include a TRIGGER CONDITIONS section: name the specific "
+            f"evidence or event that would cause you to revisit this decision in favour "
+            f"of the dissenters' position. This converts dissent from decoration into "
+            f"a decision artifact. The Chair does not ignore a near-half board."
+        )
+
     revisions_text = _render_revisions_for_chair(revisions)
     openings_summary = "\n".join(
         f"- {o['role']}: {_first_line(o['opening'])}" for o in openings
@@ -333,18 +448,30 @@ async def stage4_chairman_consensus(
         f"- {c['role']}: {_first_line(c['cross'])}" for c in cross
     )
 
+    # Confidence has already been computed externally — Chair just uses it.
+    trigger_section = (
+        f"TRIGGER CONDITIONS:\n"
+        f"<REQUIRED when board is split: the specific evidence or event that would "
+        f"cause the board to reverse this decision — tied directly to the "
+        f"dissenters' core argument>\n\n"
+        if split_info["split"] else ""
+    )
+
     user_prompt = (
         f"The board was convened to answer:\n\n\"\"\"\n{question}\n\"\"\"\n\n"
         f"Blind opening statements (one-liners):\n{openings_summary}\n\n"
         f"Cross-examination (one-liners):\n{cross_summary}\n\n"
         f"FULL REVISED POSITIONS:\n{revisions_text}\n\n"
+        f"Board convergence score (independently computed by two directors, "
+        f"not by you): {confidence}/100{dissent_block}\n\n"
         f"As Chairman, deliver the board's consensus. Your output MUST follow "
         f"this exact structure with these exact section headers in this order:\n\n"
         f"CONSENSUS:\n<2-4 sentences stating the board's agreed outcome>\n\n"
-        f"CONFIDENCE: <an integer 0-100 representing the board's confidence in the consensus>\n\n"
+        f"CONFIDENCE: {confidence}\n\n"
         f"DECISION: <exactly one of: APPROVE, APPROVE WITH CONDITIONS, REJECT, NO CONSENSUS>\n\n"
         f"RECOMMENDATION:\n<3-6 sentences with the concrete recommendation the CEO should act on>\n\n"
         f"NEXT STEPS:\n<3 to 6 concrete next steps as a markdown bullet list, each owned and time-bound>\n\n"
+        f"{trigger_section}"
         f"POINTS OF AGREEMENT:\n<markdown bullet list of where the board converged>\n\n"
         f"POINTS OF DISAGREEMENT:\n<markdown bullet list of where the board diverged; name the roles>\n\n"
         f"Do not add any prose outside these sections. Do not mention that you are an AI."
@@ -361,12 +488,15 @@ async def stage4_chairman_consensus(
         return {
             "model": board["chairman_model"],
             "raw": "The Chairman was unable to deliver a consensus. Please reconvene the board.",
-            "confidence": None,
+            "confidence": confidence,
+            "confidence_scorers": [s["model"] for s in board["seats"][:2]],
             "decision": "NO CONSENSUS",
             "recommendation": "",
             "next_steps": [],
+            "trigger_conditions": "",
             "points_of_agreement": [],
             "points_of_disagreement": [],
+            "split_info": split_info,
             "failed": True,
         }
 
@@ -374,6 +504,11 @@ async def stage4_chairman_consensus(
     parsed["model"] = board["chairman_model"]
     parsed["raw"] = raw
     parsed["failed"] = False
+    # Confidence is always the independently-scored value, not whatever
+    # the Chair wrote — the Chair cannot override its own score.
+    parsed["confidence"] = confidence
+    parsed["confidence_scorers"] = [s["model"] for s in board["seats"][:2]]
+    parsed["split_info"] = split_info
     return parsed
 
 
@@ -430,6 +565,13 @@ async def followup_turn(
         })
 
     # Chairman consensus for the follow-up
+    # Synthesize fake "revisions" from director replies for split detection + scoring
+    reply_revisions = [
+        {"role": r["role"], "revised_stance": "UNCHANGED", "revision": r["reply"]}
+        for r in director_replies
+    ]
+    followup_confidence = await _score_confidence(question, reply_revisions, board)
+
     replies_text = "\n\n".join(
         f"=== {r['role']} ===\n{r['reply']}" for r in director_replies
     )
@@ -438,6 +580,7 @@ async def followup_turn(
         f"Prior context:\n{prior_context}\n\n"
         f"New question:\n\n\"\"\"\n{question}\n\"\"\"\n\n"
         f"Directors' replies:\n\n{replies_text}\n\n"
+        f"Board convergence score (independently computed, not by you): {followup_confidence}/100\n\n"
         f"Deliver the board's consensus on this follow-up using the SAME "
         f"section structure as before (CONSENSUS, CONFIDENCE, DECISION, "
         f"RECOMMENDATION, NEXT STEPS, POINTS OF AGREEMENT, POINTS OF "
@@ -454,10 +597,12 @@ async def followup_turn(
         consensus = {
             "model": board["chairman_model"],
             "raw": "The Chairman was unable to deliver a consensus on the follow-up.",
-            "confidence": None,
+            "confidence": followup_confidence,
+            "confidence_scorers": [s["model"] for s in board["seats"][:2]],
             "decision": "NO CONSENSUS",
             "recommendation": "",
             "next_steps": [],
+            "trigger_conditions": "",
             "points_of_agreement": [],
             "points_of_disagreement": [],
             "failed": True,
@@ -467,6 +612,8 @@ async def followup_turn(
         consensus["model"] = board["chairman_model"]
         consensus["raw"] = raw
         consensus["failed"] = False
+        consensus["confidence"] = followup_confidence
+        consensus["confidence_scorers"] = [s["model"] for s in board["seats"][:2]]
 
     return director_replies, consensus
 
@@ -578,7 +725,7 @@ def _parse_consensus(raw: str) -> Dict[str, Any]:
         # next known section header or end of text.
         known = [
             "CONSENSUS", "CONFIDENCE", "DECISION", "RECOMMENDATION",
-            "NEXT STEPS", "POINTS OF AGREEMENT", "POINTS OF DISAGREEMENT",
+            "NEXT STEPS", "TRIGGER CONDITIONS", "POINTS OF AGREEMENT", "POINTS OF DISAGREEMENT",
         ]
         other = [k for k in known if k not in [a.upper() for a in aliases]]
         for alias in aliases:
@@ -596,10 +743,11 @@ def _parse_consensus(raw: str) -> Dict[str, Any]:
     decision_raw = section("DECISION")
     recommendation = section("RECOMMENDATION")
     next_steps_raw = section("NEXT STEPS", ["NEXT STEPS"])
+    trigger_raw = section("TRIGGER CONDITIONS", ["TRIGGER CONDITIONS"])
     agreement_raw = section("POINTS OF AGREEMENT", ["POINTS OF AGREEMENT"])
     disagreement_raw = section("POINTS OF DISAGREEMENT", ["POINTS OF DISAGREEMENT"])
 
-    # Confidence -> int
+    # Confidence -> int (may be overridden by caller with independently-scored value)
     confidence = None
     if confidence_raw:
         m = re.search(r"\d{1,3}", confidence_raw)
@@ -621,6 +769,7 @@ def _parse_consensus(raw: str) -> Dict[str, Any]:
         "decision": decision,
         "recommendation": recommendation,
         "next_steps": _parse_bullets(next_steps_raw),
+        "trigger_conditions": trigger_raw,
         "points_of_agreement": _parse_bullets(agreement_raw),
         "points_of_disagreement": _parse_bullets(disagreement_raw),
     }

@@ -22,6 +22,15 @@ export default function ChairmanConsensus({ consensus, followup = false }) {
 
   const decision = DECISION_META[consensus.decision] || DECISION_META['NO CONSENSUS'];
   const confidence = typeof consensus.confidence === 'number' ? consensus.confidence : null;
+  const scorers = consensus.confidence_scorers || [];
+  const splitInfo = consensus.split_info || null;
+  const triggerConditions = consensus.trigger_conditions || '';
+
+  // Confidence tooltip: who scored it
+  const scorerNames = scorers.map(s => s.split('/').pop()).join(' + ');
+  const confidenceTitle = scorerNames
+    ? `Convergence scored independently by ${scorerNames} — the Chair does not grade its own homework`
+    : 'Board confidence in the consensus';
 
   return (
     <div className={`chairman-consensus ${decision.tone} ${followup ? 'followup' : ''}`}>
@@ -33,8 +42,13 @@ export default function ChairmanConsensus({ consensus, followup = false }) {
         </div>
         <div className="cc-verdict-row">
           <div className={`decision-badge ${decision.tone}`}>{decision.label}</div>
+          {splitInfo?.split && (
+            <div className="split-badge" title={`${splitInfo.split_label} split — trigger conditions required`}>
+              ⚡ {splitInfo.split_label} split
+            </div>
+          )}
           {confidence !== null && (
-            <div className="confidence-dial" title="Board confidence in the consensus">
+            <div className="confidence-dial" title={confidenceTitle}>
               <div className="confidence-ring">
                 <svg width="48" height="48" viewBox="0 0 48 48">
                   <circle cx="24" cy="24" r="20" fill="none" stroke="#e6e6ea" strokeWidth="4" />
@@ -47,7 +61,10 @@ export default function ChairmanConsensus({ consensus, followup = false }) {
                 </svg>
                 <span className="confidence-num">{confidence}</span>
               </div>
-              <span className="confidence-label">confidence</span>
+              <span className="confidence-label">convergence</span>
+              {scorers.length > 0 && (
+                <span className="confidence-scorer-note" title={confidenceTitle}>not self-scored</span>
+              )}
             </div>
           )}
         </div>
@@ -79,6 +96,13 @@ export default function ChairmanConsensus({ consensus, followup = false }) {
               <li key={i}><ReactMarkdown>{step}</ReactMarkdown></li>
             ))}
           </ol>
+        </div>
+      )}
+
+      {triggerConditions && (
+        <div className="cc-section cc-trigger">
+          <div className="cc-section-label cc-section-label-trigger">⚡ Trigger Conditions — What Would Change This Decision</div>
+          <div className="cc-trigger-body">{triggerConditions}</div>
         </div>
       )}
 
