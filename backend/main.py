@@ -207,8 +207,21 @@ class CreateBoardSessionRequest(BaseModel):
     board: Optional[BoardConfig] = None
 
 
+class AttachmentItem(BaseModel):
+    """A file or image attached to a convene question.
+
+    For images: type='image', data_url = 'data:image/...;base64,...'
+    For text files (PDF text, .txt, .md etc.): type='text', text = extracted text
+    """
+    type: str          # 'image' | 'text'
+    name: str = ""
+    data_url: str = "" # for type='image'
+    text: str = ""     # for type='text'
+
+
 class ConveneRequest(BaseModel):
     question: str
+    attachments: List[AttachmentItem] = []
 
 
 class FollowupRequest(BaseModel):
@@ -322,6 +335,7 @@ async def convene_board_stream(session_id: str, request: ConveneRequest):
         raise HTTPException(status_code=404, detail="Board session not found")
     board = session["board"]
     question = request.question
+    attachments = [a.model_dump() for a in request.attachments]
     is_first_turn = len(session.get("turns", [])) == 0
 
     async def event_generator():
@@ -335,7 +349,7 @@ async def convene_board_stream(session_id: str, request: ConveneRequest):
 
             # Stage 1: blind openings
             yield f"data: {json.dumps({'type': 'stage1_start'})}\n\n"
-            openings = await stage1_blind_openings(question, board, counsel)
+            openings = await stage1_blind_openings(question, board, counsel, attachments=attachments)
             yield f"data: {json.dumps({'type': 'stage1_complete', 'data': openings})}\n\n"
 
             # Stage 2: cross-examination
@@ -353,10 +367,14 @@ async def convene_board_stream(session_id: str, request: ConveneRequest):
             consensus = await stage4_chairman_consensus(question, openings, cross, revisions, board, counsel)
             yield f"data: {json.dumps({'type': 'stage4_complete', 'data': consensus})}\n\n"
 
-            # Persist the turn
+            # Persist the turn (store attachment metadata — not raw base64 to keep storage lean)
+            attachment_meta = [
+                {"type": a["type"], "name": a.get("name", "")} for a in attachments
+            ]
             turn = {
                 "kind": "convene",
                 "question": question,
+                "attachments": attachment_meta,
                 "stage1": openings,
                 "stage2": cross,
                 "stage3": revisions,

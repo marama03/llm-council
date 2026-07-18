@@ -142,10 +142,10 @@ export const api = {
   // -------------------------------------------------------------------------
   // Board of Directors - convene & follow-up (streaming)
   // -------------------------------------------------------------------------
-  async conveneStream(sessionId, question, onEvent) {
+  async conveneStream(sessionId, question, onEvent, attachments = []) {
     return streamSSE(
       `${API_BASE}/api/board/sessions/${sessionId}/convene/stream`,
-      { question },
+      { question, attachments },
       onEvent
     );
   },

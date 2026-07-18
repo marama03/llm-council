@@ -22,6 +22,7 @@ from typing import List, Dict, Any, Tuple
 
 from .openrouter import query_model, query_models_parallel
 from .board_config import get_counsel_type, get_model_meta
+from typing import Optional
 
 
 # ----------------------------------------------------------------------------
@@ -92,6 +93,51 @@ def _render_revisions_for_chair(revisions: List[Dict[str, Any]]) -> str:
 
 
 # ----------------------------------------------------------------------------
+# Attachment helpers
+# ----------------------------------------------------------------------------
+
+def _build_user_content(
+    question_text: str,
+    attachments: Optional[List[Dict[str, Any]]] = None,
+) -> Any:
+    """Build the user message content, optionally including image attachments.
+
+    - If there are no attachments → returns a plain string (maximum model compat).
+    - If there are image attachments → returns an OpenAI-compatible content array
+      with text parts and image_url parts (vision format).
+    - Text/file attachments have their text prepended to the question string.
+    """
+    if not attachments:
+        return question_text
+
+    # Separate images from text files
+    image_attachments = [a for a in attachments if a.get("type") == "image" and a.get("data_url")]
+    text_attachments = [a for a in attachments if a.get("type") == "text" and a.get("text")]
+
+    # Prepend extracted text from text-file attachments to the question
+    combined_text = question_text
+    for ta in text_attachments:
+        name = ta.get("name", "file")
+        combined_text = (
+            f"[Attached file: {name}]\n\n{ta['text']}\n\n---\n\n{combined_text}"
+        )
+
+    if not image_attachments:
+        return combined_text
+
+    # Vision format: content array
+    parts: List[Dict[str, Any]] = [
+        {"type": "text", "text": combined_text}
+    ]
+    for img in image_attachments:
+        parts.append({
+            "type": "image_url",
+            "image_url": {"url": img["data_url"]},
+        })
+    return parts
+
+
+# ----------------------------------------------------------------------------
 # Stage 1 - blind opening statements
 # ----------------------------------------------------------------------------
 
@@ -99,6 +145,7 @@ async def stage1_blind_openings(
     question: str,
     board: dict,
     counsel: dict,
+    attachments: Optional[List[Dict[str, Any]]] = None,
 ) -> List[Dict[str, Any]]:
     """Each seat writes an opening statement independently.
 
@@ -106,7 +153,7 @@ async def stage1_blind_openings(
         {seat, role, model, opening}
     """
     seats = board["seats"]
-    user_prompt = (
+    user_prompt_text = (
         f"The board has been convened to answer this question:\n\n"
         f"\"\"\"\n{question}\n\"\"\"\n\n"
         f"Write your opening statement as your role. Take a clear position. "
@@ -114,13 +161,14 @@ async def stage1_blind_openings(
         f"explicit and give your real recommendation. Keep it to a few tight "
         f"paragraphs. Do not mention that you are an AI or a language model."
     )
+    user_content = _build_user_content(user_prompt_text, attachments)
 
     # Fire all seats in parallel - genuinely blind, no shared context.
     tasks = []
     for seat in seats:
         messages = [
             {"role": "system", "content": _seat_system_prompt(seat, counsel)},
-            {"role": "user", "content": user_prompt},
+            {"role": "user", "content": user_content},
         ]
         tasks.append(query_model(seat["model"], messages))
 

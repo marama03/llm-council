@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import BoardConfigPanel from './BoardConfigPanel';
 import BoardTurn from './BoardTurn';
 import VoiceController from './VoiceController';
@@ -29,10 +29,101 @@ export default function BoardroomStage({
   const [question, setQuestion] = useState('');
   const [followupQuestion, setFollowupQuestion] = useState('');
   const [showConfig, setShowConfig] = useState(true);
+  const [attachments, setAttachments] = useState([]); // [{type,name,data_url?,text?,preview?}]
+  const [isDragOver, setIsDragOver] = useState(false);
   const resultsEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const hasSession = !!session;
   const hasTurns = hasSession && session.turns && session.turns.length > 0;
+
+  // ---- Attachment processing ----
+  const processFile = useCallback((file) => {
+    const isImage = file.type.startsWith('image/');
+    const isText = (
+      file.type === 'text/plain' ||
+      file.type === 'text/markdown' ||
+      file.name.endsWith('.md') ||
+      file.name.endsWith('.txt') ||
+      file.name.endsWith('.csv')
+    );
+    const isPdf = file.type === 'application/pdf';
+
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAttachments((prev) => [
+          ...prev,
+          { type: 'image', name: file.name, data_url: e.target.result, preview: e.target.result },
+        ]);
+      };
+      reader.readAsDataURL(file);
+    } else if (isText) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAttachments((prev) => [
+          ...prev,
+          { type: 'text', name: file.name, text: e.target.result },
+        ]);
+      };
+      reader.readAsText(file);
+    } else if (isPdf) {
+      // PDF: we pass it as a note to extract text on the backend is complex,
+      // so we read it as text (basic extraction for text-based PDFs).
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        // Simple: treat as binary text — models will handle garbled PDF streams.
+        // For real PDF parsing we'd need pdf.js on the frontend.
+        // As a UX concession we add a note so the user understands the limitation.
+        const raw = e.target.result;
+        // Extract readable-ish text snippets from PDF bytestream
+        const decoded = raw.replace(/[^\x20-\x7E\n]/g, ' ').replace(/\s{3,}/g, '\n').trim();
+        setAttachments((prev) => [
+          ...prev,
+          {
+            type: 'text',
+            name: file.name,
+            text: `[PDF: ${file.name} — text extracted]\n\n${decoded.slice(0, 8000)}`,
+          },
+        ]);
+      };
+      reader.readAsBinaryString(file);
+    }
+    // Other file types: silently ignore (or could add a toast)
+  }, []);
+
+  const handleFilePick = useCallback((e) => {
+    Array.from(e.target.files || []).forEach(processFile);
+    e.target.value = ''; // reset so same file can be picked again
+  }, [processFile]);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    Array.from(e.dataTransfer.files || []).forEach(processFile);
+    // Also handle image drag from browser (dataTransfer.items with image/...)
+    Array.from(e.dataTransfer.items || []).forEach((item) => {
+      if (item.kind === 'file') return; // already handled above
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) processFile(file);
+      }
+    });
+  }, [processFile]);
+
+  const handlePaste = useCallback((e) => {
+    const items = e.clipboardData?.items || [];
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) processFile(file);
+      }
+    }
+  }, [processFile]);
+
+  const removeAttachment = (idx) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== idx));
+  };
 
   useEffect(() => {
     if (hasTurns) {
@@ -128,8 +219,15 @@ export default function BoardroomStage({
     const q = question.trim();
     if (!q || isLoading) return;
     setQuestion('');
+    // Serialize attachments for the API (images: data_url, text: text content)
+    const apiAttachments = attachments.map(({ type, name, data_url, text }) => ({
+      type,
+      name,
+      ...(type === 'image' ? { data_url } : { text: text || '' }),
+    }));
+    setAttachments([]);
     setShowConfig(false);
-    onConvene(q);
+    onConvene(q, apiAttachments);
   };
 
   const handleFollowup = (e) => {
@@ -210,7 +308,23 @@ export default function BoardroomStage({
             </div>
           )}
 
-          <form className="convene-form" onSubmit={handleConvene}>
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,.pdf,.txt,.md,.csv"
+            style={{ display: 'none' }}
+            onChange={handleFilePick}
+          />
+
+          <form
+            className={`convene-form${isDragOver ? ' drag-over' : ''}`}
+            onSubmit={handleConvene}
+            onDrop={handleDrop}
+            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+            onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setIsDragOver(false); }}
+          >
             <textarea
               className="convene-input"
               placeholder="State the decision... e.g. Should we build our own vector database? (Enter to convene, Shift+Enter for new line)"
@@ -222,16 +336,53 @@ export default function BoardroomStage({
                   handleConvene(e);
                 }
               }}
+              onPaste={handlePaste}
               disabled={isLoading}
               rows={4}
             />
-            <button
-              type="submit"
-              className="convene-btn"
-              disabled={!question.trim() || isLoading}
-            >
-              ◆ Convene the Board
-            </button>
+
+            {/* Attachment strip — shown when files are attached */}
+            {attachments.length > 0 && (
+              <div className="attachment-strip">
+                {attachments.map((att, idx) => (
+                  <div key={idx} className={`attachment-chip ${att.type}`}>
+                    {att.type === 'image' && att.preview
+                      ? <img src={att.preview} alt={att.name} className="attachment-thumb" />
+                      : <span className="attachment-icon">{att.type === 'image' ? '🖼' : '📄'}</span>
+                    }
+                    <span className="attachment-name">{att.name || (att.type === 'image' ? 'image' : 'file')}</span>
+                    <button
+                      type="button"
+                      className="attachment-remove"
+                      onClick={() => removeAttachment(idx)}
+                      title="Remove"
+                    >×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="convene-actions">
+              <button
+                type="button"
+                className="attach-btn"
+                onClick={() => fileInputRef.current?.click()}
+                title="Attach image or file (images, PDF, TXT, CSV)"
+                disabled={isLoading}
+              >
+                📎 Attach
+              </button>
+              <span className="attach-hint">
+                or paste / drag an image
+              </span>
+              <button
+                type="submit"
+                className="convene-btn"
+                disabled={!question.trim() || isLoading}
+              >
+                ◆ Convene the Board
+              </button>
+            </div>
           </form>
 
           {error && <div className="board-error">{error}</div>}

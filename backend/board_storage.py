@@ -104,11 +104,18 @@ def update_title(session_id: str, title: str):
 
 
 def update_board(session_id: str, board: dict):
-    """Persist an updated board configuration (e.g. swapped seats)."""
+    """Persist an updated board configuration (e.g. swapped seats / counsel type).
+
+    Also syncs session.counsel_type from board.counsel_type so the orange
+    header pill stays consistent when the user switches counsel type.
+    """
     session = get_session(session_id)
     if session is None:
         return
     session["board"] = board
+    # Keep top-level counsel_type in sync so the header pill reflects changes.
+    if "counsel_type" in board:
+        session["counsel_type"] = board["counsel_type"]
     save_session(session)
 
 

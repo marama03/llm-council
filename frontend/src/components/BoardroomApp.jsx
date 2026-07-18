@@ -107,7 +107,7 @@ export default function BoardroomApp() {
   }, []);
 
   // ---- Convene the board (first turn) ----
-  const handleConvene = async (question) => {
+  const handleConvene = async (question, attachments = []) => {
     if (!currentSessionId) return;
     setIsLoading(true);
     setError(null);
@@ -165,7 +165,7 @@ export default function BoardroomApp() {
           default:
             break;
         }
-      });
+      }, attachments);
     } catch (e) {
       setError(e.message || 'The board could not convene.');
       setIsLoading(false);
@@ -230,10 +230,24 @@ export default function BoardroomApp() {
     });
   };
 
-  // ---- Update the board configuration (e.g. swap a model on a seat) ----
+  // ---- Update the board configuration (e.g. swap a model on a seat or change counsel type) ----
   const handleUpdateBoard = async (newBoard) => {
     if (!currentSessionId) return;
-    patchCurrentSession((prev) => ({ ...prev, board: newBoard }));
+    // Optimistically patch BOTH board AND session.counsel_type so the orange
+    // header pill updates instantly when the user switches counsel type.
+    patchCurrentSession((prev) => ({
+      ...prev,
+      board: newBoard,
+      counsel_type: newBoard.counsel_type ?? prev.counsel_type,
+    }));
+    // Also update the sidebar session list entry for the active session.
+    setSessions((prev) =>
+      prev.map((s) =>
+        s.id === currentSessionId
+          ? { ...s, counsel_type: newBoard.counsel_type ?? s.counsel_type }
+          : s
+      )
+    );
     try {
       await api.updateBoardConfig(currentSessionId, newBoard);
     } catch (e) {

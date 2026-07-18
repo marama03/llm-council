@@ -466,6 +466,123 @@
   background: var(--text-faint);
 }
 
+/* ── Drag-over state on the convene form ── */
+.convene-form.drag-over {
+  outline: 2px dashed var(--mm-orange);
+  outline-offset: 4px;
+  border-radius: 14px;
+  background: rgba(239, 65, 36, 0.04);
+}
+
+/* ── Attachment strip ── */
+.attachment-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.attachment-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 6px;
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--mm-cream);
+  max-width: 220px;
+}
+
+.attachment-chip.image { border-color: rgba(239, 65, 36, 0.35); }
+.attachment-chip.text  { border-color: rgba(255, 200, 87, 0.3); }
+
+.attachment-thumb {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+
+.attachment-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.attachment-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.attachment-remove {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.1s;
+}
+
+.attachment-remove:hover { color: var(--mm-orange); }
+
+/* ── Convene actions row (attach + convene button) ── */
+.convene-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.attach-btn {
+  padding: 10px 16px;
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+  letter-spacing: 0.3px;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.attach-btn:hover:not(:disabled) {
+  border-color: var(--mm-orange);
+  color: var(--mm-cream);
+  background: rgba(239, 65, 36, 0.08);
+}
+
+.attach-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.attach-hint {
+  font-size: 11px;
+  color: var(--text-faint);
+  flex: 1;
+  font-style: italic;
+}
+
+/* Push convene button to the right */
+.convene-actions .convene-btn {
+  align-self: auto;
+  margin-left: auto;
+}
+
 /* ── Turns container ── */
 .turns-container {
   flex: 1;

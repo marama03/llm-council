@@ -63,8 +63,9 @@ export default function BoardConfigPanel({
         <h3>The Boardroom Table</h3>
         <p>
           Each seat is a role with a persona, filled by a genuinely different
-          LLM brain (all routed through one OpenRouter API key). Swap any brain
-          on any seat - the chairman included.
+          LLM brain. Swap any brain on any seat — the chairman included.
+          Models are called via OpenRouter; each convene uses your OpenRouter
+          credits (≈ $0.02–0.08 per full 4-stage convene).
         </p>
         <div className="counsel-select-row">
           <label>Counsel type:</label>
