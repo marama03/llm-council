@@ -261,6 +261,7 @@ export default function BoardroomApp() {
         onConvene={handleConvene}
         onFollowup={handleFollowup}
         onUpdateBoard={handleUpdateBoard}
+        onNewSession={handleNewSession}
       />
     </div>
   );

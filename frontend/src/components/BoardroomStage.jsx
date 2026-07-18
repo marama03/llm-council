@@ -24,6 +24,7 @@ export default function BoardroomStage({
   onConvene,
   onFollowup,
   onUpdateBoard,
+  onNewSession,
 }) {
   const [question, setQuestion] = useState('');
   const [followupQuestion, setFollowupQuestion] = useState('');
@@ -40,6 +41,10 @@ export default function BoardroomStage({
   }, [hasTurns, session?.turns?.length]);
 
   if (!hasSession) {
+    const liveModels = (models || []).map((m) => m.name);
+    const modelsLabel = liveModels.length
+      ? liveModels.join(' · ')
+      : 'loading…';
     return (
       <div className="boardroom-stage">
         <div className="boardroom-empty">
@@ -79,7 +84,38 @@ export default function BoardroomStage({
             chairman synthesizes a confidence score, a decision, and next steps.
             This is the antidote to AI psychosis.
           </p>
-          <div className="empty-arrow">Select "+ Convene Board" in the sidebar to begin</div>
+
+          {/* The obvious entry point — pick a counsel type to convene a board.
+              This both fixes the "I can't see how to start" UX bug AND surfaces
+              a backend-reachability failure (no counsel types = clear error). */}
+          <div className="empty-cta">
+            <div className="empty-cta-title">Convene a board to begin</div>
+            {counselTypes.length === 0 ? (
+              <div className="empty-cta-loading">
+                {error
+                  ? `Backend not reachable: ${error}`
+                  : 'Loading board types… if this persists, the backend on :8001 is not running.'}
+              </div>
+            ) : (
+              <div className="empty-cta-cards">
+                {counselTypes.map((c) => (
+                  <button
+                    key={c.key}
+                    className="empty-cta-card"
+                    onClick={() => onNewSession && onNewSession(c.key)}
+                    disabled={isLoading}
+                  >
+                    <div className="empty-cta-card-label">{c.label}</div>
+                    <div className="empty-cta-card-desc">{c.description}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="empty-models-line">
+            Live brains: <strong>{modelsLabel}</strong>
+          </div>
         </div>
       </div>
     );

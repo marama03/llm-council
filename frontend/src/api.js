@@ -1,8 +1,14 @@
 /**
  * API client for the LLM Council & Board of Directors backend.
+ *
+ * In dev (Vite) we use an EMPTY base so the browser fetches same-origin relative
+ * URLs ("/api/..."); Vite's dev-server proxy (see vite.config.js) forwards
+ * /api/* to the FastAPI backend on :8001. This avoids mixed-content errors
+ * (https page -> http://localhost:8001) and CORS issues in the sandbox preview.
+ * For a separate production deploy, set VITE_API_BASE to the backend's absolute
+ * URL (e.g. "https://api.example.com") and the calls below will use it as-is.
  */
-
-const API_BASE = (import.meta.env.VITE_API_BASE || 'http://localhost:8001');
+const API_BASE = (import.meta.env.VITE_API_BASE || '');
 
 // ---------------------------------------------------------------------------
 // Streaming helper (Server-Sent Events over fetch)
