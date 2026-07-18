@@ -159,7 +159,7 @@ export default function BoardroomStage({
     const liveModels = (models || []).map((m) => m.name);
     const modelsLabel = liveModels.length ? liveModels.join(' · ') : 'loading…';
     return (
-      <div className="boardroom-stage">
+      <div className="boardroom-stage welcome">
         <div className="boardroom-empty">
           <div className="empty-emblem">The Council</div>
           <h1>Five different models.<br /><span>One decisive answer.</span></h1>
