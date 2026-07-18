@@ -97,16 +97,16 @@ function BlindOpenings({ openings }) {
   return (
     <div className="stage-block openings">
       <div className="stage-header">
-        <h3>Stage 1 · Blind Opening Statements</h3>
-        <span className="stage-sub">Each director wrote independently — no shared context.</span>
+        <h3>Round I · Blind Opening Statements</h3>
+        <span className="stage-sub">Each director wrote independently. Zero shared context. Pure signal.</span>
       </div>
       <div className="director-cards">
         {openings.map((o, i) => {
           const isOpen = open[i] !== false;
           return (
-            <div className={`director-card ${o.failed ? 'failed' : ''}`} key={i}>
+            <div className={`director-card ${o.failed ? 'failed' : ''}`} key={i} data-seat={i}>
               <div className="director-card-head" onClick={() => toggle(i)}>
-                <span className="dir-emblem">◆</span>
+                <span className="dir-emblem">{shortRole(o.role)}</span>
                 <div className="dir-info">
                   <div className="dir-role">{o.role}</div>
                   <div className="dir-focus">{o.focus}</div>
@@ -137,8 +137,8 @@ function CrossExamination({ cross }) {
   return (
     <div className="stage-block cross">
       <div className="stage-header">
-        <h3>Stage 2 · Cross-Examination</h3>
-        <span className="stage-sub">Each director reads everyone's opening and challenges the table.</span>
+        <h3>Round II · Cross-Examination</h3>
+        <span className="stage-sub">Each director reads the full table and challenges the assumptions.</span>
       </div>
 
       <div className="cross-layout">
@@ -185,14 +185,14 @@ function RevisedPositions({ revisions }) {
   return (
     <div className="stage-block revisions">
       <div className="stage-header">
-        <h3>Stage 3 · Revised Positions</h3>
-        <span className="stage-sub">After cross-examination, each director takes a final stance.</span>
+        <h3>Round III · Revised Positions</h3>
+        <span className="stage-sub">Stand firm, concede, or flip. Every stance earns its label.</span>
       </div>
       <div className="revisions-grid">
         {revisions.map((r, i) => (
           <div className={`revision-card stance-${r.revised_stance.toLowerCase()}`} key={i}>
             <div className="revision-head">
-              <span className="dir-emblem">◆</span>
+              <span className="dir-emblem">{shortRole(r.role)}</span>
               <div className="dir-info">
                 <div className="dir-role">{r.role}</div>
                 <div className="dir-focus">{r.focus}</div>
@@ -220,8 +220,8 @@ function FollowupReplies({ replies }) {
   return (
     <div className="stage-block followup-replies">
       <div className="stage-header">
-        <h3>Directors' Replies</h3>
-        <span className="stage-sub">Re-convened with the prior transcript in context.</span>
+        <h3>Directors' Responses</h3>
+        <span className="stage-sub">Re-convened with full prior transcript. Context intact.</span>
       </div>
       <div className="cross-layout">
         <div className="cross-tabs">
@@ -252,4 +252,12 @@ function FollowupReplies({ replies }) {
 function shortModel(id) {
   if (!id) return '?';
   return id.split('/').pop() || id;
+}
+
+// Two-letter initials for the emblem circle
+function shortRole(role) {
+  if (!role) return '??';
+  const words = role.replace(/chief/i, '').trim().split(/\s+/);
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  return role.slice(0, 2).toUpperCase();
 }

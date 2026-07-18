@@ -43,18 +43,44 @@ export default function BoardroomStage({
     return (
       <div className="boardroom-stage">
         <div className="boardroom-empty">
-          <div className="empty-emblem">◆</div>
-          <h1>Board of Directors</h1>
-          <p className="empty-tagline">
-            One question. Six brains. Cross-examination. A chairman's consensus.
-          </p>
+          <div className="empty-emblem">The Council</div>
+          <h1>Six different models.<br /><span>One decisive answer.</span></h1>
+          <p className="empty-tagline">Not one model wearing six masks.</p>
+
+          {/* Radial ring — blending OLD circular visualization */}
+          <div className="empty-circle-diagram">
+            <div className="empty-circle-ring" />
+            <div className="empty-circle-ring ring-2" />
+            {[
+              { label: 'Grok', angle: 0 },
+              { label: 'Llama', angle: 60 },
+              { label: 'GLM', angle: 120 },
+              { label: 'DeepSeek', angle: 180 },
+              { label: 'Qwen', angle: 240 },
+              { label: 'Mistral', angle: 300 },
+            ].map(({ label, angle }) => {
+              const r = 88;
+              const rad = ((angle - 90) * Math.PI) / 180;
+              const x = 50 + (r / 2) * Math.cos(rad);
+              const y = 50 + (r / 2) * Math.sin(rad);
+              return (
+                <div
+                  key={label}
+                  className="empty-dot"
+                  data-label={label}
+                  style={{ left: `${x}%`, top: `${y}%` }}
+                />
+              );
+            })}
+          </div>
+
           <p className="empty-sub">
-            Convene a board of genuinely different LLMs to break AI psychosis.
-            Each director writes a blind opening, then cross-examines the table,
-            then revises their stance. The chairman delivers a consensus with a
-            confidence score, a decision, and next steps.
+            Pose a question. Six genuinely different LLMs deliberate in blind
+            openings, cross-examine each other, revise their stances. The
+            chairman synthesizes a confidence score, a decision, and next steps.
+            This is the antidote to AI psychosis.
           </p>
-          <div className="empty-arrow">← Start a new board from the sidebar</div>
+          <div className="empty-arrow">Select "+ Convene Board" in the sidebar to begin</div>
         </div>
       </div>
     );
@@ -125,11 +151,11 @@ export default function BoardroomStage({
       {!hasTurns && (
         <div className="convene-area">
           <div className="convene-prompt">
-            <h3>Put your question to the board</h3>
+            <h3>Put a decision <span>before the board</span></h3>
             <p className="convene-help">
-              The directors will write blind opening statements, cross-examine
-              one another, revise their positions, and the chairman will deliver
-              a consensus.
+              Directors write blind opening statements, then cross-examine each
+              other, then revise their stances. The chairman synthesizes a
+              decision. Execution-ready output, not a wall of opinions.
             </p>
           </div>
 
@@ -152,7 +178,7 @@ export default function BoardroomStage({
           <form className="convene-form" onSubmit={handleConvene}>
             <textarea
               className="convene-input"
-              placeholder="State the decision the board should debate... (Enter to convene, Shift+Enter for a new line)"
+              placeholder="State the decision... e.g. Should we build our own vector database? (Enter to convene, Shift+Enter for new line)"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={(e) => {
@@ -169,7 +195,7 @@ export default function BoardroomStage({
               className="convene-btn"
               disabled={!question.trim() || isLoading}
             >
-              Convene the Board
+              ◆ Convene the Board
             </button>
           </form>
 
@@ -195,7 +221,7 @@ export default function BoardroomStage({
             <input
               type="text"
               className="followup-input"
-              placeholder="Ask the board a follow-up question..."
+              placeholder="Dig deeper — ask the board a follow-up..."
               value={followupQuestion}
               onChange={(e) => setFollowupQuestion(e.target.value)}
               disabled={isLoading}
@@ -205,7 +231,7 @@ export default function BoardroomStage({
               className="followup-btn"
               disabled={!followupQuestion.trim() || isLoading}
             >
-              Re-convene
+              → Re-convene
             </button>
           </form>
 

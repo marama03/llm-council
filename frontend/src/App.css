@@ -1,6 +1,4 @@
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 .app {
   display: flex;
@@ -8,43 +6,41 @@
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background: #f7f7f5;
-  color: #1a1d2e;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  background: var(--bg);
+  color: var(--text-body);
+  font-family: var(--font-body);
 }
 
-/* Mode switch (top strip) */
+/* ── Top mode-switch strip ── */
 .mode-switch {
   display: flex;
   gap: 0;
-  background: #1a1d2e;
-  border-bottom: 1px solid #2a2f48;
+  background: var(--bg-mid);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  padding: 0 12px;
+  padding: 0 16px;
 }
 
 .mode-btn {
-  padding: 9px 18px;
+  padding: 10px 20px;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: #8a8fb0;
+  color: var(--text-muted);
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
   transition: color 0.15s, border-color 0.15s;
 }
 
-.mode-btn:hover {
-  color: #e6e6f0;
-}
+.mode-btn:hover { color: var(--mm-cream); }
 
 .mode-btn.active {
-  color: #c9a227;
-  border-bottom-color: #c9a227;
+  color: var(--mm-yellow);
+  border-bottom-color: var(--mm-orange);
 }
 
 .mode-content {

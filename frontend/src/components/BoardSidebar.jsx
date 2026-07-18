@@ -24,10 +24,10 @@ export default function BoardSidebar({
     <div className="board-sidebar">
       <div className="board-sidebar-header">
         <div className="brand">
-          <span className="brand-mark">◆</span>
+          <div className="brand-mark">M</div>
           <div>
-            <div className="brand-title">Board of Directors</div>
-            <div className="brand-sub">The routing antidote</div>
+            <div className="brand-title">The Council</div>
+            <div className="brand-sub">by Marama Marketing</div>
           </div>
         </div>
 
@@ -37,11 +37,11 @@ export default function BoardSidebar({
             onClick={() => setShowNewMenu((v) => !v)}
             disabled={!counselTypes.length}
           >
-            + New Board
++ Convene Board
           </button>
           {showNewMenu && (
             <div className="new-session-menu">
-              <div className="menu-title">Choose counsel type</div>
+              <div className="menu-title">Select board type</div>
               {counselTypes.map((c) => (
                 <button
                   key={c.key}
@@ -60,7 +60,8 @@ export default function BoardSidebar({
       <div className="session-list">
         {sessions.length === 0 ? (
           <div className="no-sessions">
-            No boards yet. Start a new board to convene your directors.
+            <strong>No boards yet.</strong>
+            Convene your first board. Put a real decision in front of six genuinely different brains.
           </div>
         ) : (
           sessions.map((s) => (
@@ -90,7 +91,7 @@ export default function BoardSidebar({
       </div>
 
       <div className="board-sidebar-footer">
-        <span>1 API · many brains · via OpenRouter</span>
+        <span>Execution trumps knowledge.</span>
       </div>
     </div>
   );

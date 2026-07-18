@@ -27,8 +27,8 @@ export default function ChairmanConsensus({ consensus, followup = false }) {
     <div className={`chairman-consensus ${decision.tone} ${followup ? 'followup' : ''}`}>
       <div className="cc-header">
         <div className="cc-title-row">
-          <span className="cc-emblem">★</span>
-          <h3>{followup ? "Chairman's Updated Consensus" : "Chairman's Consensus"}</h3>
+          <span className="cc-emblem">THE CHAIR</span>
+          <h3>{followup ? "The Chair's Updated Decision" : "The Chair's Decision"}</h3>
           <span className="cc-brain">{shortModel(consensus.model)}</span>
         </div>
         <div className="cc-verdict-row">

@@ -1,19 +1,18 @@
 .stage-loading {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
   padding: 22px 24px;
-  margin: 18px 0;
-  background: #ffffff;
-  border: 1px solid #e6e6ea;
+  margin: 16px 0;
+  background: var(--bg-mid);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(26, 29, 46, 0.04);
 }
 
 .stage-loading-spinner {
   position: relative;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
 }
 
@@ -24,7 +23,7 @@
   transform: translate(-50%, -50%);
   width: 12px;
   height: 12px;
-  background: #c9a227;
+  background: var(--mm-orange);
   border-radius: 50%;
 }
 
@@ -32,10 +31,10 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 36px;
-  height: 36px;
-  margin: -18px 0 0 -18px;
-  border: 2px solid #c9a227;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border: 2px solid var(--mm-orange);
   border-radius: 50%;
   opacity: 0;
   animation: pulse-ring 1.6s ease-out infinite;
@@ -43,22 +42,25 @@
 
 .pulse-ring.delay {
   animation-delay: 0.8s;
+  border-color: var(--mm-yellow);
 }
 
 @keyframes pulse-ring {
-  0% { transform: scale(0.5); opacity: 0.9; }
-  100% { transform: scale(1.4); opacity: 0; }
+  0%   { transform: scale(0.5); opacity: 0.85; }
+  100% { transform: scale(1.5); opacity: 0; }
 }
+
+.stage-loading-text { display: flex; flex-direction: column; gap: 3px; }
 
 .stage-loading-label {
   font-size: 14px;
   font-weight: 700;
-  color: #1a1d2e;
+  color: var(--mm-cream);
+  font-family: var(--font-body);
 }
 
 .stage-loading-sub {
   font-size: 12px;
-  color: #8a8fb0;
-  margin-top: 3px;
+  color: var(--text-muted);
   font-style: italic;
 }

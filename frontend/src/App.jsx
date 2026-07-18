@@ -15,14 +15,14 @@ function App() {
           onClick={() => setMode('boardroom')}
           title="Board of Directors - blind openings, cross-examination, revised positions, chairman consensus"
         >
-          Board of Directors
+          The Council
         </button>
         <button
           className={`mode-btn ${mode === 'council' ? 'active' : ''}`}
           onClick={() => setMode('council')}
           title="Classic Council - responses, peer rankings, synthesis"
         >
-          Classic Council
+          Classic Mode
         </button>
       </div>
       <div className="mode-content">

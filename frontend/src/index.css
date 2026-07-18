@@ -1,8 +1,54 @@
+/* ─────────────────────────────────────────────────────────────
+   Marama Marketing · Brand Design Tokens
+   Primary:    #ef4124  (orange — energy, action)
+   Secondary:  #ec7323  (warm orange)
+   Background: #000022  (navy — deep trust, authority)
+   Accent:     #efca08  (yellow — highlight, confidence)
+   Cream:      #ece4b7  (warm alt / warm text)
+   Neutral:    #666666, #f3f3f3, #ffffff
+   ───────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  /* Brand palette */
+  --mm-navy:       #000022;
+  --mm-navy-mid:   #0a0a3a;
+  --mm-navy-light: #141450;
+  --mm-navy-border:#1e1e5a;
+  --mm-orange:     #ef4124;
+  --mm-orange-2:   #ec7323;
+  --mm-yellow:     #efca08;
+  --mm-yellow-dim: #c9a800;
+  --mm-cream:      #ece4b7;
+  --mm-cream-dim:  #c8bf96;
+  --mm-white:      #ffffff;
+  --mm-off-white:  #f3f3f3;
+  --mm-grey:       #666666;
+
+  /* Semantic aliases */
+  --bg:            var(--mm-navy);
+  --bg-mid:        var(--mm-navy-mid);
+  --bg-light:      var(--mm-navy-light);
+  --border:        var(--mm-navy-border);
+  --primary:       var(--mm-orange);
+  --primary-2:     var(--mm-orange-2);
+  --accent:        var(--mm-yellow);
+  --accent-dim:    var(--mm-yellow-dim);
+  --warm:          var(--mm-cream);
+  --warm-dim:      var(--mm-cream-dim);
+  --text-bright:   var(--mm-white);
+  --text-body:     var(--mm-cream);
+  --text-muted:    #9a9ab8;
+  --text-faint:    #5a5a80;
+
+  /* Typography */
+  --font-display:  'Playfair Display', Georgia, serif;
+  --font-body:     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  font-family: var(--font-body);
   line-height: 1.5;
   font-weight: 400;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -19,7 +65,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #f5f5f5;
+  background: var(--bg);
+  color: var(--text-body);
 }
 
 #root {
@@ -28,18 +75,20 @@ body {
   overflow: hidden;
 }
 
-/* Global markdown styling */
-.markdown-content {
-  padding: 12px;
+/* ── Scrollbars ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
 
-.markdown-content p {
-  margin: 0 0 12px 0;
-}
-
-.markdown-content p:last-child {
-  margin-bottom: 0;
-}
+/* ── Global markdown ── */
+.markdown-content { padding: 12px; }
+.markdown-content p { margin: 0 0 12px 0; }
+.markdown-content p:last-child { margin-bottom: 0; }
 
 .markdown-content h1,
 .markdown-content h2,
@@ -48,14 +97,14 @@ body {
 .markdown-content h5,
 .markdown-content h6 {
   margin: 16px 0 8px 0;
+  color: var(--mm-cream);
+  font-family: var(--font-display);
 }
 
 .markdown-content h1:first-child,
 .markdown-content h2:first-child,
 .markdown-content h3:first-child,
-.markdown-content h4:first-child,
-.markdown-content h5:first-child,
-.markdown-content h6:first-child {
+.markdown-content h4:first-child {
   margin-top: 0;
 }
 
@@ -65,34 +114,41 @@ body {
   padding-left: 24px;
 }
 
-.markdown-content li {
-  margin: 4px 0;
-}
+.markdown-content li { margin: 4px 0; }
 
 .markdown-content pre {
-  background: #f5f5f5;
+  background: var(--bg-mid);
+  border: 1px solid var(--border);
   padding: 12px;
-  border-radius: 4px;
+  border-radius: 6px;
   overflow-x: auto;
   margin: 0 0 12px 0;
 }
 
 .markdown-content code {
-  background: #f5f5f5;
+  background: var(--bg-mid);
+  border: 1px solid var(--border);
   padding: 2px 6px;
   border-radius: 3px;
   font-family: monospace;
   font-size: 0.9em;
+  color: var(--mm-yellow);
 }
 
 .markdown-content pre code {
   background: none;
+  border: none;
   padding: 0;
 }
 
 .markdown-content blockquote {
   margin: 0 0 12px 0;
   padding-left: 16px;
-  border-left: 4px solid #ddd;
-  color: #666;
+  border-left: 3px solid var(--mm-orange);
+  color: var(--text-muted);
+}
+
+.markdown-content strong {
+  color: var(--mm-cream);
+  font-weight: 700;
 }
