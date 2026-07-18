@@ -87,60 +87,20 @@
   position: relative;
 }
 
-/* Mini circle diagram — blending the OLD radial ring */
-.empty-circle-diagram {
-  position: relative;
-  width: 200px;
-  height: 200px;
-  margin: 0 0 32px 0;
+/* ── Roundtable SVG diagram ── */
+.roundtable-svg {
+  width: 280px;
+  height: 280px;
+  margin: 0 0 24px 0;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 32px rgba(239, 65, 36, 0.18))
+          drop-shadow(0 0 60px rgba(239, 202, 8, 0.08));
+  animation: table-breathe 6s ease-in-out infinite;
 }
 
-.empty-circle-ring {
-  position: absolute;
-  inset: 0;
-  border: 1px solid rgba(239, 65, 36, 0.25);
-  border-radius: 50%;
-  animation: ring-pulse 4s ease-in-out infinite;
-}
-
-.empty-circle-ring.ring-2 {
-  inset: 20px;
-  border-color: rgba(239, 202, 8, 0.15);
-  animation-delay: 1s;
-}
-
-@keyframes ring-pulse {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50%       { opacity: 1;   transform: scale(1.02); }
-}
-
-.empty-dot {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--mm-orange);
-  transform: translate(-50%, -50%);
-}
-
-.empty-dot::after {
-  content: attr(data-label);
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 9px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  font-family: var(--font-body);
-}
-
-.empty-arrow {
-  font-size: 12px;
-  color: var(--text-faint);
-  font-style: italic;
-  position: relative;
-  letter-spacing: 0.2px;
+@keyframes table-breathe {
+  0%, 100% { filter: drop-shadow(0 0 28px rgba(239, 65, 36, 0.18)) drop-shadow(0 0 55px rgba(239, 202, 8, 0.07)); }
+  50%       { filter: drop-shadow(0 0 44px rgba(239, 65, 36, 0.30)) drop-shadow(0 0 80px rgba(239, 202, 8, 0.13)); }
 }
 
 /* ── Welcome-screen call-to-action (obvious entry point) ── */

@@ -11,6 +11,7 @@ export default function BoardSidebar({
   onSelectSession,
   onNewSession,
   onDeleteSession,
+  onGoHome,
   counselTypes,
 }) {
   const [showNewMenu, setShowNewMenu] = useState(false);
@@ -23,7 +24,14 @@ export default function BoardSidebar({
   return (
     <div className="board-sidebar">
       <div className="board-sidebar-header">
-        <div className="brand">
+        <div
+          className="brand brand-home"
+          onClick={onGoHome}
+          title="Return to home screen"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && onGoHome?.()}
+        >
           <div className="brand-mark">MM</div>
           <div>
             <div className="brand-title">The Council</div>

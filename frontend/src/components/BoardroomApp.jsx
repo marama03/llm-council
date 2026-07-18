@@ -74,6 +74,13 @@ export default function BoardroomApp() {
     }
   };
 
+  // ---- Logo click: return to home/welcome screen ----
+  const handleGoHome = () => {
+    setCurrentSessionId(null);
+    setCurrentSession(null);
+    setPendingCounsel(null);
+  };
+
   // ---- Welcome screen: pick a counsel type (NO session created yet) ----
   const handlePickCounsel = (counselKey) => {
     setPendingCounsel(counselKey);
@@ -282,6 +289,7 @@ export default function BoardroomApp() {
         onSelectSession={setCurrentSessionId}
         onNewSession={handleNewSession}
         onDeleteSession={handleDeleteSession}
+        onGoHome={handleGoHome}
         counselTypes={counselTypes}
       />
       <BoardroomStage

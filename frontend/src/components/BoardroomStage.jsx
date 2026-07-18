@@ -4,6 +4,216 @@ import BoardTurn from './BoardTurn';
 import VoiceController from './VoiceController';
 import './BoardroomStage.css';
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   RoundtableDiagram
+   A high-tech, glowing SVG boardroom roundtable in Marama Marketing colors.
+   Five AI directors sit around a glowing navy/orange table with connective
+   light lines, pulsing aura rings, and branded seat labels.
+───────────────────────────────────────────────────────────────────────────── */
+function RoundtableDiagram() {
+  const seats = [
+    { label: 'GPT',      angle: -90,  color: '#ef4124', glow: 'rgba(239,65,36,0.7)',   initials: 'G' },
+    { label: 'Claude',   angle: -18,  color: '#ec7323', glow: 'rgba(236,115,35,0.7)',  initials: 'C' },
+    { label: 'DeepSeek', angle:  54,  color: '#efca08', glow: 'rgba(239,202,8,0.65)',  initials: 'D' },
+    { label: 'Qwen',     angle: 126,  color: '#ece4b7', glow: 'rgba(236,228,183,0.6)', initials: 'Q' },
+    { label: 'Mistral',  angle: 198,  color: '#ec7323', glow: 'rgba(236,115,35,0.7)',  initials: 'M' },
+  ];
+
+  const cx = 200, cy = 200, r = 130;
+
+  const toXY = (angleDeg, radius) => {
+    const rad = (angleDeg * Math.PI) / 180;
+    return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
+  };
+
+  return (
+    <svg
+      className="roundtable-svg"
+      viewBox="0 0 400 400"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-label="Five AI models around a council roundtable"
+    >
+      <defs>
+        {/* Table surface radial glow */}
+        <radialGradient id="tableGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stopColor="#141450" />
+          <stop offset="55%"  stopColor="#0a0a3a" />
+          <stop offset="100%" stopColor="#000022" />
+        </radialGradient>
+
+        {/* Orange rim glow */}
+        <radialGradient id="rimGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="60%"  stopColor="transparent" />
+          <stop offset="100%" stopColor="rgba(239,65,36,0.25)" />
+        </radialGradient>
+
+        {/* Inner table shimmer */}
+        <radialGradient id="innerShimmer" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stopColor="rgba(239,65,36,0.08)" />
+          <stop offset="40%"  stopColor="rgba(239,202,8,0.04)" />
+          <stop offset="100%" stopColor="transparent" />
+        </radialGradient>
+
+        {/* Per-seat glows */}
+        {seats.map((s) => {
+          const pos = toXY(s.angle, r);
+          return (
+            <radialGradient key={`rg-${s.label}`} id={`sg-${s.label}`} cx="50%" cy="50%" r="50%">
+              <stop offset="0%"   stopColor={s.color} stopOpacity="0.35" />
+              <stop offset="100%" stopColor={s.color} stopOpacity="0" />
+            </radialGradient>
+          );
+        })}
+
+        {/* Drop-shadow filter for seat nodes */}
+        <filter id="nodeShadow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+
+        {/* Soft glow filter for table edge */}
+        <filter id="edgeGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+
+        {/* Line glow */}
+        <filter id="lineGlow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+
+      {/* ── Outer atmosphere pulse ring ── */}
+      <circle cx={cx} cy={cy} r="185" fill="none" stroke="rgba(239,65,36,0.06)" strokeWidth="1">
+        <animate attributeName="r" values="182;190;182" dur="5s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.4;0.8;0.4" dur="5s" repeatCount="indefinite" />
+      </circle>
+      <circle cx={cx} cy={cy} r="170" fill="none" stroke="rgba(239,202,8,0.05)" strokeWidth="1">
+        <animate attributeName="r" values="168;174;168" dur="7s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.3;0.6;0.3" dur="7s" repeatCount="indefinite" />
+      </circle>
+
+      {/* ── Table surface ── */}
+      <circle cx={cx} cy={cy} r="110" fill="url(#tableGlow)" />
+
+      {/* Table edge glow ring */}
+      <circle cx={cx} cy={cy} r="110" fill="none"
+        stroke="rgba(239,65,36,0.55)" strokeWidth="2" filter="url(#edgeGlow)" />
+      <circle cx={cx} cy={cy} r="110" fill="none"
+        stroke="rgba(239,65,36,0.9)" strokeWidth="1.2" />
+
+      {/* Inner table highlights */}
+      <circle cx={cx} cy={cy} r="110" fill="url(#innerShimmer)" />
+      <circle cx={cx} cy={cy} r="88" fill="none"
+        stroke="rgba(239,202,8,0.1)" strokeWidth="0.8" />
+      <circle cx={cx} cy={cy} r="60" fill="none"
+        stroke="rgba(239,65,36,0.12)" strokeWidth="0.6" />
+
+      {/* Council emblem lines (star from center) */}
+      {seats.map((s) => {
+        const pos = toXY(s.angle, 100);
+        return (
+          <line key={`cl-${s.label}`}
+            x1={cx} y1={cy} x2={pos.x} y2={pos.y}
+            stroke={s.color} strokeWidth="0.5" strokeOpacity="0.18"
+          />
+        );
+      })}
+
+      {/* Connector polygon (seats joined by glowing ring) */}
+      <polygon
+        points={seats.map((s) => { const p = toXY(s.angle, r); return `${p.x},${p.y}`; }).join(' ')}
+        fill="none"
+        stroke="rgba(239,65,36,0.15)"
+        strokeWidth="1"
+        filter="url(#lineGlow)"
+      />
+      {/* Brighter connector lines between adjacent seats */}
+      {seats.map((s, i) => {
+        const a = toXY(s.angle, r);
+        const b = toXY(seats[(i + 1) % seats.length].angle, r);
+        return (
+          <line key={`ln-${i}`}
+            x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+            stroke={s.color} strokeWidth="0.8" strokeOpacity="0.22"
+            filter="url(#lineGlow)"
+          />
+        );
+      })}
+
+      {/* ── Seat nodes ── */}
+      {seats.map((s, i) => {
+        const pos = toXY(s.angle, r);
+        const labelPos = toXY(s.angle, r + 34);
+        const animDelay = `${i * 0.6}s`;
+        return (
+          <g key={s.label}>
+            {/* Seat glow halo */}
+            <circle cx={pos.x} cy={pos.y} r="26"
+              fill={`url(#sg-${s.label})`}>
+              <animate attributeName="r" values="24;30;24" dur="4s" begin={animDelay} repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.6;1;0.6" dur="4s" begin={animDelay} repeatCount="indefinite" />
+            </circle>
+
+            {/* Chair back arc */}
+            <circle cx={pos.x} cy={pos.y} r="18"
+              fill="rgba(0,0,34,0.85)"
+              stroke={s.color} strokeWidth="1.8"
+              filter="url(#nodeShadow)"
+            />
+
+            {/* Chair inner shimmer */}
+            <circle cx={pos.x} cy={pos.y} r="14"
+              fill="rgba(255,255,255,0.03)"
+              stroke={s.color} strokeWidth="0.6" strokeOpacity="0.5"
+            />
+
+            {/* Initials */}
+            <text
+              x={pos.x} y={pos.y + 5}
+              textAnchor="middle"
+              fontSize="11"
+              fontWeight="800"
+              fontFamily="Inter, sans-serif"
+              fill={s.color}
+              style={{ userSelect: 'none' }}
+            >{s.initials}</text>
+
+            {/* Label beneath */}
+            <text
+              x={labelPos.x} y={labelPos.y + 4}
+              textAnchor="middle"
+              fontSize="9.5"
+              fontWeight="700"
+              fontFamily="Inter, sans-serif"
+              letterSpacing="0.8"
+              fill="rgba(236,228,183,0.85)"
+              style={{ userSelect: 'none', textTransform: 'uppercase' }}
+            >{s.label}</text>
+          </g>
+        );
+      })}
+
+      {/* ── Central chairman mark ── */}
+      <circle cx={cx} cy={cy} r="18" fill="rgba(0,0,34,0.9)"
+        stroke="rgba(239,65,36,0.8)" strokeWidth="1.5" filter="url(#edgeGlow)" />
+      <circle cx={cx} cy={cy} r="18" fill="none"
+        stroke="rgba(239,65,36,0.9)" strokeWidth="1.2" />
+      <circle cx={cx} cy={cy} r="13" fill="rgba(239,65,36,0.08)"
+        stroke="rgba(239,202,8,0.4)" strokeWidth="0.8" />
+      {/* Chairman crown diamond */}
+      <polygon
+        points={`${cx},${cy - 8} ${cx + 5},${cy} ${cx},${cy + 6} ${cx - 5},${cy}`}
+        fill="rgba(239,65,36,0.9)"
+        stroke="rgba(239,202,8,0.6)" strokeWidth="0.5"
+      >
+        <animate attributeName="opacity" values="0.7;1;0.7" dur="2.5s" repeatCount="indefinite" />
+      </polygon>
+    </svg>
+  );
+}
+
 /**
  * BoardroomStage - the main pane of the Board of Directors.
  *
@@ -145,30 +355,7 @@ export default function BoardroomStage({
           <h1>Five different models.<br /><span>One decisive answer.</span></h1>
           <p className="empty-tagline">Not one model wearing five masks.</p>
 
-          <div className="empty-circle-diagram">
-            <div className="empty-circle-ring" />
-            <div className="empty-circle-ring ring-2" />
-            {[
-              { label: 'GPT',      angle: 0 },
-              { label: 'Claude',   angle: 72 },
-              { label: 'DeepSeek', angle: 144 },
-              { label: 'Qwen',     angle: 216 },
-              { label: 'Mistral',  angle: 288 },
-            ].map(({ label, angle }) => {
-              const r = 88;
-              const rad = ((angle - 90) * Math.PI) / 180;
-              const x = 50 + (r / 2) * Math.cos(rad);
-              const y = 50 + (r / 2) * Math.sin(rad);
-              return (
-                <div
-                  key={label}
-                  className="empty-dot"
-                  data-label={label}
-                  style={{ left: `${x}%`, top: `${y}%` }}
-                />
-              );
-            })}
-          </div>
+          <RoundtableDiagram />
 
           <p className="empty-sub">
             Pose a question. Five genuinely different LLMs deliberate in blind
