@@ -327,7 +327,6 @@
   font-size: 14px;
   line-height: 1.7;
   color: var(--mm-cream);
-  white-space: pre-wrap;
 }
 
 .cc-failed-note {

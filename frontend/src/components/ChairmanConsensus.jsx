@@ -102,7 +102,9 @@ export default function ChairmanConsensus({ consensus, followup = false }) {
       {triggerConditions && (
         <div className="cc-section cc-trigger">
           <div className="cc-section-label cc-section-label-trigger">⚡ Trigger Conditions — What Would Change This Decision</div>
-          <div className="cc-trigger-body">{triggerConditions}</div>
+          <div className="cc-trigger-body markdown-content">
+            <ReactMarkdown>{triggerConditions}</ReactMarkdown>
+          </div>
         </div>
       )}
 
