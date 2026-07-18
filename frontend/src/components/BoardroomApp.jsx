@@ -7,16 +7,19 @@ import './BoardroomApp.css';
 /**
  * BoardroomApp - the "Board of Directors" experience.
  *
- * Left rail: list of board sessions + new-session control.
- * Main pane: boardroom stage - counsel selector, seat config, question input,
- * example chips, convene button, and the streamed 4-stage results with
- * cross-examination, revised positions, chairman consensus, voice playback,
- * download, and follow-up.
+ * Ghost-session fix: we no longer create a DB session when the user picks a
+ * counsel type on the welcome screen. Instead we track a `pendingCounsel`
+ * (just the counsel key string) and only call api.createBoardSession when the
+ * user actually submits a question (handleConvene). This eliminates 0-turn
+ * ghost sessions in the sidebar.
  */
 export default function BoardroomApp() {
   const [sessions, setSessions] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [currentSession, setCurrentSession] = useState(null);
+
+  // "Pending" counsel type — chosen on welcome screen but no session created yet
+  const [pendingCounsel, setPendingCounsel] = useState(null);
 
   const [counselTypes, setCounselTypes] = useState([]);
   const [models, setModels] = useState([]);
@@ -44,21 +47,24 @@ export default function BoardroomApp() {
     loadSessions();
   }, []);
 
-  const loadSessions = async () => {
-    try {
-      setSessions(await api.listBoardSessions());
-    } catch (e) {
-      console.error('Failed to list board sessions:', e);
-    }
-  };
-
   useEffect(() => {
     if (currentSessionId) {
       loadSession(currentSessionId);
+      setPendingCounsel(null); // clear pending when a real session is active
     } else {
       setCurrentSession(null);
     }
   }, [currentSessionId]);
+
+  const loadSessions = async () => {
+    try {
+      const all = await api.listBoardSessions();
+      // Filter out any 0-turn sessions that might have leaked previously
+      setSessions(all.filter((s) => s.turn_count > 0));
+    } catch (e) {
+      console.error('Failed to list board sessions:', e);
+    }
+  };
 
   const loadSession = async (id) => {
     try {
@@ -68,24 +74,17 @@ export default function BoardroomApp() {
     }
   };
 
-  // ---- Create a new board session with a chosen counsel type ----
-  const handleNewSession = async (counselKey) => {
-    try {
-      const sess = await api.createBoardSession(counselKey, null);
-      setSessions([
-        {
-          id: sess.id,
-          created_at: sess.created_at,
-          title: sess.title,
-          counsel_type: sess.counsel_type,
-          turn_count: 0,
-        },
-        ...sessions,
-      ]);
-      setCurrentSessionId(sess.id);
-    } catch (e) {
-      console.error('Failed to create board session:', e);
-    }
+  // ---- Welcome screen: pick a counsel type (NO session created yet) ----
+  const handlePickCounsel = (counselKey) => {
+    setPendingCounsel(counselKey);
+    setCurrentSessionId(null);
+  };
+
+  // ---- Sidebar: "+ Convene Board" also just picks a counsel type ----
+  // The session is actually created only when the user submits a question.
+  const handleNewSession = (counselKey) => {
+    setPendingCounsel(counselKey);
+    setCurrentSessionId(null);
   };
 
   const handleDeleteSession = async (id) => {
@@ -106,23 +105,55 @@ export default function BoardroomApp() {
     setCurrentSession((prev) => (prev ? fn(prev) : prev));
   }, []);
 
+  const patchLastTurn = useCallback((fn) => {
+    patchCurrentSession((prev) => {
+      const turns = [...prev.turns];
+      const last = turns[turns.length - 1];
+      turns[turns.length - 1] = fn(last);
+      return { ...prev, turns };
+    });
+  }, [patchCurrentSession]);
+
   // ---- Convene the board (first turn) ----
+  // If there is no current session yet (pending counsel), create one now.
   const handleConvene = async (question, attachments = []) => {
-    if (!currentSessionId) return;
     setIsLoading(true);
     setError(null);
+
+    let sessionId = currentSessionId;
+
+    // Lazy session creation — only happens when the user actually asks a question
+    if (!sessionId) {
+      const key = pendingCounsel || (counselTypes[0]?.key);
+      if (!key) {
+        setError('No counsel type selected.');
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const sess = await api.createBoardSession(key, null);
+        sessionId = sess.id;
+        setCurrentSessionId(sess.id);
+        setCurrentSession(sess);
+        // Don't add to sidebar list until it has turns — we add it after complete
+      } catch (e) {
+        setError('Failed to create board session.');
+        setIsLoading(false);
+        return;
+      }
+    }
 
     // Optimistic: append an empty convene turn
     const newTurn = {
       kind: 'convene',
       question,
       stage1: null, stage2: null, stage3: null, stage4: null,
-      loading: { stage1: false, stage2: false, stage3: false, stage4: false },
+      loading: { stage1: true, stage2: false, stage3: false, stage4: false },
     };
-    patchCurrentSession((prev) => ({ ...prev, turns: [...prev.turns, newTurn] }));
+    patchCurrentSession((prev) => ({ ...prev, turns: [...(prev?.turns || []), newTurn] }));
 
     try {
-      await api.conveneStream(currentSessionId, question, (type, event) => {
+      await api.conveneStream(sessionId, question, (type, event) => {
         switch (type) {
           case 'stage1_start':
             patchLastTurn((t) => ({ ...t, loading: { ...t.loading, stage1: true } }));
@@ -150,13 +181,12 @@ export default function BoardroomApp() {
             break;
           case 'title_complete':
             patchCurrentSession((prev) => ({ ...prev, title: event.data.title }));
-            loadSessions();
             break;
           case 'complete':
             setIsLoading(false);
+            // Now add/refresh the session in the sidebar (it has turns now)
             loadSessions();
-            // Reload to get the persisted turn with proper structure
-            loadSession(currentSessionId);
+            loadSession(sessionId);
             break;
           case 'error':
             setError(event.message || 'The board could not convene.');
@@ -183,7 +213,7 @@ export default function BoardroomApp() {
       question,
       directors: null,
       chairman: null,
-      loading: { directors: false, chairman: false },
+      loading: { directors: true, chairman: false },
     };
     patchCurrentSession((prev) => ({ ...prev, turns: [...prev.turns, newTurn] }));
 
@@ -221,26 +251,14 @@ export default function BoardroomApp() {
     }
   };
 
-  const patchLastTurn = (fn) => {
-    patchCurrentSession((prev) => {
-      const turns = [...prev.turns];
-      const last = turns[turns.length - 1];
-      turns[turns.length - 1] = fn(last);
-      return { ...prev, turns };
-    });
-  };
-
-  // ---- Update the board configuration (e.g. swap a model on a seat or change counsel type) ----
+  // ---- Update the board configuration ----
   const handleUpdateBoard = async (newBoard) => {
     if (!currentSessionId) return;
-    // Optimistically patch BOTH board AND session.counsel_type so the orange
-    // header pill updates instantly when the user switches counsel type.
     patchCurrentSession((prev) => ({
       ...prev,
       board: newBoard,
       counsel_type: newBoard.counsel_type ?? prev.counsel_type,
     }));
-    // Also update the sidebar session list entry for the active session.
     setSessions((prev) =>
       prev.map((s) =>
         s.id === currentSessionId
@@ -260,6 +278,7 @@ export default function BoardroomApp() {
       <BoardSidebar
         sessions={sessions}
         currentSessionId={currentSessionId}
+        pendingCounsel={pendingCounsel}
         onSelectSession={setCurrentSessionId}
         onNewSession={handleNewSession}
         onDeleteSession={handleDeleteSession}
@@ -267,6 +286,7 @@ export default function BoardroomApp() {
       />
       <BoardroomStage
         session={currentSession}
+        pendingCounsel={pendingCounsel}
         counselTypes={counselTypes}
         models={models}
         examples={examples}
@@ -275,7 +295,7 @@ export default function BoardroomApp() {
         onConvene={handleConvene}
         onFollowup={handleFollowup}
         onUpdateBoard={handleUpdateBoard}
-        onNewSession={handleNewSession}
+        onPickCounsel={handlePickCounsel}
       />
     </div>
   );

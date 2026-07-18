@@ -23,37 +23,39 @@
 }
 
 .brand-mark {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   background: linear-gradient(135deg, var(--mm-orange) 0%, var(--mm-orange-2) 100%);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 900;
   color: var(--mm-white);
   font-family: var(--font-body);
   flex-shrink: 0;
-  letter-spacing: -0.5px;
-  box-shadow: 0 4px 14px rgba(239, 65, 36, 0.4);
+  letter-spacing: 0;
+  box-shadow: 0 4px 16px rgba(239, 65, 36, 0.5);
+  border: 1px solid rgba(255,255,255,0.15);
 }
 
 .brand-title {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 800;
   color: var(--mm-white);
-  letter-spacing: 0.2px;
-  font-family: var(--font-body);
+  letter-spacing: 0.3px;
+  font-family: var(--font-display);
+  line-height: 1.2;
 }
 
 .brand-sub {
   font-size: 10px;
-  color: var(--mm-orange);
-  margin-top: 2px;
-  letter-spacing: 0.8px;
+  color: var(--mm-yellow);
+  margin-top: 3px;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* ── New session button ── */
@@ -150,14 +152,14 @@
 .no-sessions {
   padding: 28px 16px;
   text-align: center;
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: 13px;
   line-height: 1.6;
 }
 
 .no-sessions strong {
   display: block;
-  color: var(--text-muted);
+  color: var(--mm-cream);
   margin-bottom: 6px;
   font-size: 14px;
 }
@@ -183,8 +185,8 @@
 
 .session-title {
   font-size: 13px;
-  font-weight: 600;
-  color: var(--mm-cream);
+  font-weight: 700;
+  color: var(--mm-white);
   margin-bottom: 4px;
   padding-right: 24px;
   overflow: hidden;

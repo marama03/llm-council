@@ -36,10 +36,11 @@
 
 .turn-counsel {
   margin-left: auto;
-  color: var(--text-faint);
+  color: var(--mm-cream-dim);
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 /* ── Question block ── */
@@ -101,7 +102,7 @@
 .stage-sub {
   display: block;
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--mm-cream-dim);
   margin-top: 4px;
   font-style: italic;
 }
@@ -193,7 +194,7 @@
 
 .dir-focus {
   font-size: 10px;
-  color: var(--text-faint);
+  color: var(--mm-cream-dim);
   margin-top: 2px;
   font-style: italic;
 }
@@ -210,8 +211,8 @@
 }
 
 .dir-toggle {
-  color: var(--text-faint);
-  font-size: 12px;
+  color: var(--mm-cream-dim);
+  font-size: 13px;
   flex-shrink: 0;
 }
 
@@ -219,7 +220,7 @@
   padding: 12px 14px;
   font-size: 13px;
   line-height: 1.7;
-  color: var(--text-body);
+  color: var(--mm-cream);
   max-height: 380px;
   overflow-y: auto;
 }
@@ -281,7 +282,7 @@
 .cross-tab-brain {
   font-size: 10px;
   font-family: monospace;
-  color: var(--text-faint);
+  color: var(--mm-cream-dim);
 }
 
 .cross-tab.active .cross-tab-brain {
@@ -321,9 +322,9 @@
 }
 
 .challenges li {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
-  color: var(--text-body);
+  color: var(--mm-cream);
 }
 
 .ch-role {
@@ -331,12 +332,12 @@
   color: var(--mm-orange);
 }
 
-.ch-point { color: var(--text-body); }
+.ch-point { color: var(--mm-cream); }
 
 .cross-text {
   font-size: 13px;
   line-height: 1.7;
-  color: var(--text-body);
+  color: var(--mm-cream);
 }
 
 /* ── Revised positions ── */
@@ -399,7 +400,7 @@
   padding: 12px 14px;
   font-size: 13px;
   line-height: 1.7;
-  color: var(--text-body);
+  color: var(--mm-cream);
   max-height: 360px;
   overflow-y: auto;
 }

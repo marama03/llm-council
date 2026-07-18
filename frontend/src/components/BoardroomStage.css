@@ -80,7 +80,7 @@
 
 .empty-sub {
   font-size: 15px;
-  color: var(--text-muted);
+  color: var(--mm-cream-dim);
   max-width: 560px;
   line-height: 1.7;
   margin: 0 0 32px 0;
@@ -222,14 +222,14 @@
 
 .empty-cta-card-desc {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--mm-cream-dim);
   line-height: 1.5;
 }
 
 .empty-models-line {
   position: relative;
   font-size: 12px;
-  color: var(--text-faint);
+  color: var(--text-muted);
   margin-top: 4px;
   font-family: var(--font-body);
 }
@@ -260,7 +260,7 @@
 }
 
 .session-name {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--mm-white);
   margin: 0;
@@ -268,6 +268,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   font-family: var(--font-display);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
 }
 
 .counsel-pill,
@@ -350,9 +351,17 @@
   color: var(--mm-orange);
 }
 
+.convene-counsel-desc {
+  font-size: 13px;
+  color: var(--mm-yellow);
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  font-style: italic;
+}
+
 .convene-help {
   font-size: 14px;
-  color: var(--text-muted);
+  color: var(--mm-cream-dim);
   line-height: 1.65;
   margin: 0;
 }
@@ -378,10 +387,10 @@
 
 .example-chip {
   padding: 7px 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255,255,255,0.15);
   border-radius: 20px;
-  color: var(--text-muted);
+  color: var(--mm-cream-dim);
   font-size: 12px;
   cursor: pointer;
   transition: all 0.15s;
@@ -573,7 +582,7 @@
 
 .attach-hint {
   font-size: 11px;
-  color: var(--text-faint);
+  color: var(--text-muted);
   flex: 1;
   font-style: italic;
 }

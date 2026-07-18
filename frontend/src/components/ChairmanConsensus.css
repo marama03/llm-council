@@ -127,7 +127,7 @@
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: var(--text-faint);
+  color: var(--mm-cream-dim);
   font-weight: 700;
 }
 
@@ -164,7 +164,7 @@
 .cc-recommendation .markdown-content {
   font-size: 14px;
   line-height: 1.7;
-  color: var(--text-body);
+  color: var(--mm-cream);
 }
 
 .cc-next-steps {
@@ -183,7 +183,7 @@
 .next-steps-list li {
   font-size: 14px;
   line-height: 1.65;
-  color: var(--text-body);
+  color: var(--mm-cream);
   padding: 10px 14px;
   background: var(--bg-light);
   border-radius: 8px;
@@ -225,7 +225,7 @@
 .cc-bullets li {
   font-size: 13px;
   line-height: 1.55;
-  color: var(--text-body);
+  color: var(--mm-cream);
   padding: 6px 10px;
   border-radius: 6px;
 }
@@ -249,7 +249,7 @@
 .cc-raw-toggle button {
   background: transparent;
   border: none;
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: 11px;
   cursor: pointer;
   padding: 4px 0;
@@ -257,7 +257,7 @@
   letter-spacing: 0.3px;
 }
 
-.cc-raw-toggle button:hover { color: var(--text-muted); }
+.cc-raw-toggle button:hover { color: var(--mm-cream); }
 
 .cc-raw {
   margin: 10px 0 0;

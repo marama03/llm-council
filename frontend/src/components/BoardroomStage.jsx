@@ -8,14 +8,13 @@ import './BoardroomStage.css';
  * BoardroomStage - the main pane of the Board of Directors.
  *
  * Three states:
- *   1. no session  -> welcome / empty state
- *   2. session with no turns -> boardroom "table" setup (counsel selector,
- *      seat config, question input, example chips, convene button)
- *   3. session with turns -> the convened board's results, plus a follow-up
- *      bar at the bottom
+ *   1. no session + no pendingCounsel  -> welcome / empty state (pick a counsel type)
+ *   2. pendingCounsel set (no session) -> setup: question input, no session created yet
+ *   3. session with turns              -> results + follow-up bar
  */
 export default function BoardroomStage({
   session,
+  pendingCounsel,
   counselTypes,
   models,
   examples,
@@ -24,20 +23,22 @@ export default function BoardroomStage({
   onConvene,
   onFollowup,
   onUpdateBoard,
-  onNewSession,
+  onPickCounsel,
 }) {
   const [question, setQuestion] = useState('');
   const [followupQuestion, setFollowupQuestion] = useState('');
-  // Hide the full config strip by default when there are already turns —
-  // user wants to see results, not the static seat list
   const [showConfig, setShowConfig] = useState(true);
-  const [attachments, setAttachments] = useState([]); // [{type,name,data_url?,text?,preview?}]
+  const [attachments, setAttachments] = useState([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const resultsEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  // Track whether we just convened (to enable auto-scroll during streaming)
+  const isConvening = useRef(false);
 
   const hasSession = !!session;
   const hasTurns = hasSession && session.turns && session.turns.length > 0;
+  // Show the setup pane if there's a pending counsel type OR an active session with no turns yet
+  const showSetup = pendingCounsel || (hasSession && !hasTurns);
 
   // ---- Attachment processing ----
   const processFile = useCallback((file) => {
@@ -70,15 +71,9 @@ export default function BoardroomStage({
       };
       reader.readAsText(file);
     } else if (isPdf) {
-      // PDF: we pass it as a note to extract text on the backend is complex,
-      // so we read it as text (basic extraction for text-based PDFs).
       const reader = new FileReader();
       reader.onload = (e) => {
-        // Simple: treat as binary text — models will handle garbled PDF streams.
-        // For real PDF parsing we'd need pdf.js on the frontend.
-        // As a UX concession we add a note so the user understands the limitation.
         const raw = e.target.result;
-        // Extract readable-ish text snippets from PDF bytestream
         const decoded = raw.replace(/[^\x20-\x7E\n]/g, ' ').replace(/\s{3,}/g, '\n').trim();
         setAttachments((prev) => [
           ...prev,
@@ -91,21 +86,19 @@ export default function BoardroomStage({
       };
       reader.readAsBinaryString(file);
     }
-    // Other file types: silently ignore (or could add a toast)
   }, []);
 
   const handleFilePick = useCallback((e) => {
     Array.from(e.target.files || []).forEach(processFile);
-    e.target.value = ''; // reset so same file can be picked again
+    e.target.value = '';
   }, [processFile]);
 
   const handleDrop = useCallback((e) => {
     e.preventDefault();
     setIsDragOver(false);
     Array.from(e.dataTransfer.files || []).forEach(processFile);
-    // Also handle image drag from browser (dataTransfer.items with image/...)
     Array.from(e.dataTransfer.items || []).forEach((item) => {
-      if (item.kind === 'file') return; // already handled above
+      if (item.kind === 'file') return;
       if (item.type.startsWith('image/')) {
         const file = item.getAsFile();
         if (file) processFile(file);
@@ -127,17 +120,24 @@ export default function BoardroomStage({
     setAttachments((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  // Auto-scroll ONLY while actively convening/streaming, not when switching sessions
   useEffect(() => {
-    if (hasTurns) {
+    if (hasTurns && isConvening.current) {
       resultsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [hasTurns, session?.turns?.length]);
 
-  if (!hasSession) {
+  // Stop the convening ref once loading completes
+  useEffect(() => {
+    if (!isLoading) {
+      isConvening.current = false;
+    }
+  }, [isLoading]);
+
+  // ---- Welcome screen: no session and no pending counsel ----
+  if (!hasSession && !pendingCounsel) {
     const liveModels = (models || []).map((m) => m.name);
-    const modelsLabel = liveModels.length
-      ? liveModels.join(' · ')
-      : 'loading…';
+    const modelsLabel = liveModels.length ? liveModels.join(' · ') : 'loading…';
     return (
       <div className="boardroom-stage">
         <div className="boardroom-empty">
@@ -145,7 +145,6 @@ export default function BoardroomStage({
           <h1>Five different models.<br /><span>One decisive answer.</span></h1>
           <p className="empty-tagline">Not one model wearing five masks.</p>
 
-          {/* Radial ring — blending OLD circular visualization */}
           <div className="empty-circle-diagram">
             <div className="empty-circle-ring" />
             <div className="empty-circle-ring ring-2" />
@@ -178,11 +177,8 @@ export default function BoardroomStage({
             This is the antidote to AI psychosis.
           </p>
 
-          {/* The obvious entry point — pick a counsel type to convene a board.
-              This both fixes the "I can't see how to start" UX bug AND surfaces
-              a backend-reachability failure (no counsel types = clear error). */}
           <div className="empty-cta">
-            <div className="empty-cta-title">Convene a board to begin</div>
+            <div className="empty-cta-title">Choose a board type to begin</div>
             {counselTypes.length === 0 ? (
               <div className="empty-cta-loading">
                 {error
@@ -195,7 +191,7 @@ export default function BoardroomStage({
                   <button
                     key={c.key}
                     className="empty-cta-card"
-                    onClick={() => onNewSession && onNewSession(c.key)}
+                    onClick={() => onPickCounsel && onPickCounsel(c.key)}
                     disabled={isLoading}
                   >
                     <div className="empty-cta-card-label">{c.label}</div>
@@ -214,14 +210,16 @@ export default function BoardroomStage({
     );
   }
 
-  const counsel = counselTypes.find((c) => c.key === session.counsel_type) || null;
+  // ---- Resolve counsel info ----
+  const activeCounselKey = session?.counsel_type || pendingCounsel;
+  const counsel = counselTypes.find((c) => c.key === activeCounselKey) || null;
 
   const handleConvene = (e) => {
     e?.preventDefault();
     const q = question.trim();
     if (!q || isLoading) return;
+    isConvening.current = true;
     setQuestion('');
-    // Serialize attachments for the API (images: data_url, text: text content)
     const apiAttachments = attachments.map(({ type, name, data_url, text }) => ({
       type,
       name,
@@ -236,6 +234,7 @@ export default function BoardroomStage({
     e?.preventDefault();
     const q = followupQuestion.trim();
     if (!q || isLoading) return;
+    isConvening.current = true;
     setFollowupQuestion('');
     onFollowup(q);
   };
@@ -245,14 +244,18 @@ export default function BoardroomStage({
       {/* Header strip */}
       <div className="boardroom-header">
         <div className="boardroom-header-left">
-          <h2 className="session-name">{session.title || 'Board Session'}</h2>
-          <span className="counsel-pill">{counsel ? counsel.label : session.counsel_type}</span>
-          <span className="turn-count-pill">
-            {session.turns.length} turn{session.turns.length === 1 ? '' : 's'}
-          </span>
+          <h2 className="session-name">
+            {session?.title || (counsel ? counsel.label : 'New Board')}
+          </h2>
+          <span className="counsel-pill">{counsel ? counsel.label : activeCounselKey}</span>
+          {hasTurns && (
+            <span className="turn-count-pill">
+              {session.turns.length} turn{session.turns.length === 1 ? '' : 's'}
+            </span>
+          )}
         </div>
         <div className="boardroom-header-right">
-          <VoiceController session={session} />
+          {hasSession && <VoiceController session={session} />}
           <button
             className="config-toggle"
             onClick={() => setShowConfig((v) => !v)}
@@ -264,29 +267,24 @@ export default function BoardroomStage({
       </div>
 
       {/* Configuration panel (collapsible) */}
-      {showConfig && !hasTurns && (
+      {showConfig && session && (
         <BoardConfigPanel
           session={session}
           counselTypes={counselTypes}
           models={models}
           onUpdateBoard={onUpdateBoard}
-        />
-      )}
-      {showConfig && hasTurns && (
-        <BoardConfigPanel
-          session={session}
-          counselTypes={counselTypes}
-          models={models}
-          onUpdateBoard={onUpdateBoard}
-          compact
+          compact={hasTurns}
         />
       )}
 
       {/* Setup state: question input + example chips */}
-      {!hasTurns && (
+      {showSetup && (
         <div className="convene-area">
           <div className="convene-prompt">
             <h3>Put a decision <span>before the board</span></h3>
+            {counsel && (
+              <p className="convene-counsel-desc">{counsel.description}</p>
+            )}
             <p className="convene-help">
               Directors write blind opening statements, then cross-examine each
               other, then revise their stances. The chairman synthesizes a
@@ -310,7 +308,6 @@ export default function BoardroomStage({
             </div>
           )}
 
-          {/* Hidden file input */}
           <input
             ref={fileInputRef}
             type="file"
@@ -329,7 +326,7 @@ export default function BoardroomStage({
           >
             <textarea
               className="convene-input"
-              placeholder="State the decision... e.g. Should we build our own vector database? (Enter to convene, Shift+Enter for new line)"
+              placeholder="State the decision… e.g. Should we build our own vector database? (Enter to convene, Shift+Enter for new line)"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={(e) => {
@@ -343,7 +340,6 @@ export default function BoardroomStage({
               rows={4}
             />
 
-            {/* Attachment strip — shown when files are attached */}
             {attachments.length > 0 && (
               <div className="attachment-strip">
                 {attachments.map((att, idx) => (
@@ -374,9 +370,7 @@ export default function BoardroomStage({
               >
                 📎 Attach
               </button>
-              <span className="attach-hint">
-                or paste / drag an image
-              </span>
+              <span className="attach-hint">or paste / drag an image</span>
               <button
                 type="submit"
                 className="convene-btn"

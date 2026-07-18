@@ -75,15 +75,15 @@ body {
   overflow: hidden;
 }
 
-/* ── Scrollbars ── */
+/* ── Scrollbars — yellow so they're visible on the dark navy background ── */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+  scrollbar-color: var(--mm-yellow-dim) rgba(0,0,34,0.4);
 }
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: rgba(0,0,34,0.4); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: var(--mm-yellow-dim); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--mm-yellow); }
 
 /* ── Global markdown ── */
 .markdown-content { padding: 12px; }
@@ -149,6 +149,16 @@ body {
 }
 
 .markdown-content strong {
-  color: var(--mm-cream);
+  color: var(--mm-white);
   font-weight: 700;
+}
+
+/* ── Base text override — ensure markdown prose is readable cream not grey ── */
+.markdown-content {
+  color: var(--mm-cream);
+}
+
+.markdown-content p,
+.markdown-content li {
+  color: var(--mm-cream);
 }

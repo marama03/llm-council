@@ -26,19 +26,19 @@
 }
 
 .config-intro h3 {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
-  color: var(--mm-orange);
-  margin: 0 0 4px 0;
+  color: var(--mm-yellow);
+  margin: 0 0 5px 0;
   text-transform: uppercase;
   letter-spacing: 1.2px;
   font-family: var(--font-body);
 }
 
 .config-intro p {
-  font-size: 11px;
-  color: var(--text-faint);
-  line-height: 1.5;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.55;
   margin: 0;
   max-width: 600px;
 }
@@ -201,7 +201,7 @@
 .seat-role {
   font-size: 13px;
   font-weight: 700;
-  color: var(--mm-cream);
+  color: var(--mm-white);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -213,7 +213,7 @@
 
 .seat-focus {
   font-size: 10px;
-  color: var(--text-faint);
+  color: var(--mm-cream-dim);
   margin-top: 2px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
@@ -272,18 +272,18 @@
 }
 
 .persona-label {
-  font-size: 9px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--mm-yellow-dim);
-  margin-bottom: 4px;
+  color: var(--mm-yellow);
+  margin-bottom: 6px;
   font-weight: 700;
 }
 
 .seat-persona p {
   margin: 0;
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.6;
+  font-size: 13px;
+  color: var(--mm-cream);
+  line-height: 1.65;
   font-style: italic;
 }
