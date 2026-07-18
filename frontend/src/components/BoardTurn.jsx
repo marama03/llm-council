@@ -19,12 +19,8 @@ import './BoardTurn.css';
  */
 export default function BoardTurn({ turn, turnIndex, counselLabel }) {
   const isConvene = turn.kind === 'convene';
-  // Deliberation (stages 1-3) collapsed by default — verdict first
-  const [showDeliberation, setShowDeliberation] = useState(false);
 
   if (isConvene) {
-    const isStreaming = turn.loading?.stage1 || turn.loading?.stage2 ||
-                        turn.loading?.stage3 || turn.loading?.stage4;
     return (
       <div className="board-turn">
         <div className="turn-banner">
@@ -51,31 +47,13 @@ export default function BoardTurn({ turn, turnIndex, counselLabel }) {
           <StageLoading label="Stage 4 · Chairman's consensus" sub="The chairman synthesizes a decision." />
         )}
 
-        {/* Stage 4: verdict FIRST — always above the fold */}
+        {/* The full meat of the process — stages 1-3 inline, fully expanded */}
+        {turn.stage1 && <BlindOpenings openings={turn.stage1} />}
+        {turn.stage2 && <CrossExamination cross={turn.stage2} />}
+        {turn.stage3 && <RevisedPositions revisions={turn.stage3} />}
+
+        {/* Stage 4: Chairman's consensus verdict — after the deliberation */}
         {turn.stage4 && <ChairmanConsensus consensus={turn.stage4} />}
-
-        {/* Deliberation toggle — stages 1-3 collapsed by default */}
-        {(turn.stage1 || turn.stage2 || turn.stage3) && !isStreaming && (
-          <div className="deliberation-toggle">
-            <button
-              className="deliberation-toggle-btn"
-              onClick={() => setShowDeliberation(v => !v)}
-            >
-              {showDeliberation ? '▾ Hide full deliberation' : '▸ Show full deliberation'}
-              <span className="deliberation-toggle-sub">
-                {showDeliberation ? '' : 'Openings · Cross-exam · Revised positions'}
-              </span>
-            </button>
-          </div>
-        )}
-
-        {showDeliberation && (
-          <div className="deliberation-body">
-            {turn.stage1 && <BlindOpenings openings={turn.stage1} />}
-            {turn.stage2 && <CrossExamination cross={turn.stage2} />}
-            {turn.stage3 && <RevisedPositions revisions={turn.stage3} />}
-          </div>
-        )}
       </div>
     );
   }
