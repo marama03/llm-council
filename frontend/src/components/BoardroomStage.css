@@ -1,0 +1,331 @@
+.boardroom-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f7f7f5;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ---------- Empty state ---------- */
+.boardroom-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px;
+  color: #4a4a5a;
+}
+
+.empty-emblem {
+  font-size: 56px;
+  color: #c9a227;
+  margin-bottom: 16px;
+  line-height: 1;
+}
+
+.boardroom-empty h1 {
+  font-size: 32px;
+  margin: 0 0 12px 0;
+  color: #1a1d2e;
+  letter-spacing: -0.5px;
+}
+
+.empty-tagline {
+  font-size: 18px;
+  color: #2a2f48;
+  margin: 0 0 20px 0;
+  font-weight: 500;
+}
+
+.empty-sub {
+  font-size: 14px;
+  color: #6a6f8f;
+  max-width: 560px;
+  line-height: 1.65;
+  margin: 0 0 28px 0;
+}
+
+.empty-arrow {
+  font-size: 13px;
+  color: #8a8fb0;
+  font-style: italic;
+}
+
+/* ---------- Header strip ---------- */
+.boardroom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 22px;
+  background: #ffffff;
+  border-bottom: 1px solid #e6e6ea;
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.boardroom-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.session-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1d2e;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.counsel-pill,
+.turn-count-pill {
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.counsel-pill {
+  background: #fdf3d4;
+  color: #8a6a10;
+  border: 1px solid #ecd089;
+}
+
+.turn-count-pill {
+  background: #eef0f7;
+  color: #4a4a5a;
+  border: 1px solid #d9dce8;
+}
+
+.boardroom-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.config-toggle {
+  padding: 7px 12px;
+  background: #ffffff;
+  border: 1px solid #d0d0d8;
+  border-radius: 8px;
+  color: #4a4a5a;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.config-toggle:hover {
+  background: #f4f4f8;
+  border-color: #b0b0bc;
+}
+
+/* ---------- Convene area (setup state) ---------- */
+.convene-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.convene-prompt {
+  text-align: center;
+  max-width: 620px;
+  margin-bottom: 22px;
+}
+
+.convene-prompt h3 {
+  font-size: 20px;
+  color: #1a1d2e;
+  margin: 0 0 8px 0;
+}
+
+.convene-help {
+  font-size: 14px;
+  color: #6a6f8f;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.example-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 760px;
+  justify-content: center;
+  margin-bottom: 22px;
+  align-items: center;
+}
+
+.example-label {
+  font-size: 12px;
+  color: #8a8fb0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 4px;
+}
+
+.example-chip {
+  padding: 6px 12px;
+  background: #ffffff;
+  border: 1px solid #d9dce8;
+  border-radius: 16px;
+  color: #4a4a5a;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.example-chip:hover:not(:disabled) {
+  background: #1a1d2e;
+  color: #fff;
+  border-color: #1a1d2e;
+}
+
+.example-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.convene-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 760px;
+}
+
+.convene-input {
+  width: 100%;
+  padding: 16px;
+  background: #ffffff;
+  border: 2px solid #d9dce8;
+  border-radius: 12px;
+  color: #1a1d2e;
+  font-size: 15px;
+  font-family: inherit;
+  line-height: 1.55;
+  outline: none;
+  resize: vertical;
+  min-height: 110px;
+  box-shadow: 0 2px 8px rgba(26, 29, 46, 0.04);
+}
+
+.convene-input:focus {
+  border-color: #c9a227;
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.12);
+}
+
+.convene-input:disabled {
+  opacity: 0.6;
+  background: #f0f0f0;
+}
+
+.convene-btn {
+  align-self: center;
+  padding: 13px 32px;
+  background: #c9a227;
+  border: 1px solid #c9a227;
+  border-radius: 10px;
+  color: #1a1d2e;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  letter-spacing: 0.3px;
+}
+
+.convene-btn:hover:not(:disabled) {
+  background: #d8b53f;
+  border-color: #d8b53f;
+}
+
+.convene-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #c0c0c8;
+  border-color: #c0c0c8;
+}
+
+/* ---------- Turns container ---------- */
+.turns-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px 28px 12px;
+}
+
+.followup-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 10px;
+  padding: 14px 0 4px;
+  margin-top: 12px;
+  background: linear-gradient(to top, #f7f7f5 70%, rgba(247, 247, 245, 0));
+}
+
+.followup-input {
+  flex: 1;
+  padding: 13px 16px;
+  background: #ffffff;
+  border: 1px solid #d0d0d8;
+  border-radius: 10px;
+  color: #1a1d2e;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(26, 29, 46, 0.05);
+}
+
+.followup-input:focus {
+  border-color: #c9a227;
+}
+
+.followup-input:disabled {
+  opacity: 0.6;
+  background: #f0f0f0;
+}
+
+.followup-btn {
+  padding: 13px 22px;
+  background: #1a1d2e;
+  border: 1px solid #1a1d2e;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.followup-btn:hover:not(:disabled) {
+  background: #2a2f48;
+}
+
+.followup-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.board-error {
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: #fdecea;
+  border: 1px solid #f5c6c0;
+  border-radius: 8px;
+  color: #a02818;
+  font-size: 13px;
+  max-width: 760px;
+  align-self: center;
+}

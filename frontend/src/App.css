@@ -4,12 +4,52 @@
 
 .app {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background: #ffffff;
-  color: #333;
+  background: #f7f7f5;
+  color: #1a1d2e;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
+}
+
+/* Mode switch (top strip) */
+.mode-switch {
+  display: flex;
+  gap: 0;
+  background: #1a1d2e;
+  border-bottom: 1px solid #2a2f48;
+  flex-shrink: 0;
+  padding: 0 12px;
+}
+
+.mode-btn {
+  padding: 9px 18px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #8a8fb0;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.mode-btn:hover {
+  color: #e6e6f0;
+}
+
+.mode-btn.active {
+  color: #c9a227;
+  border-bottom-color: #c9a227;
+}
+
+.mode-content {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
 }

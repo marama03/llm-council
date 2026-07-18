@@ -1,0 +1,392 @@
+.board-turn {
+  max-width: 920px;
+  margin: 0 auto 32px;
+}
+
+.turn-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: #1a1d2e;
+  color: #e6e6f0;
+  border-radius: 8px 8px 0 0;
+  font-size: 12px;
+}
+
+.turn-num {
+  font-weight: 700;
+  color: #c9a227;
+}
+
+.turn-kind {
+  background: #2a2f48;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.turn-counsel {
+  margin-left: auto;
+  color: #9aa0c4;
+  font-size: 11px;
+}
+
+.turn-question {
+  background: #ffffff;
+  border: 1px solid #e6e6ea;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.turn-question-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8a8fb0;
+  font-weight: 700;
+}
+
+.turn-question-text {
+  font-size: 16px;
+  line-height: 1.55;
+  color: #1a1d2e;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* ---------- Stage blocks ---------- */
+.stage-block {
+  background: #ffffff;
+  border: 1px solid #e6e6ea;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+
+.stage-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid #f0eee4;
+  background: #fcfcfb;
+}
+
+.stage-header h3 {
+  font-size: 15px;
+  color: #1a1d2e;
+  margin: 0;
+  font-weight: 700;
+}
+
+.stage-sub {
+  display: block;
+  font-size: 12px;
+  color: #8a8fb0;
+  margin-top: 3px;
+  font-style: italic;
+}
+
+/* ---------- Blind openings: director cards ---------- */
+.director-cards {
+  padding: 14px 16px 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.director-card {
+  background: #fafafa;
+  border: 1px solid #e6e6ea;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.director-card:hover {
+  border-color: #d0d0d8;
+  box-shadow: 0 2px 8px rgba(26, 29, 46, 0.04);
+}
+
+.director-card.failed {
+  background: #fdf3f1;
+  border-color: #f5c6c0;
+}
+
+.director-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  background: #f4f4f8;
+  border-bottom: 1px solid #e6e6ea;
+}
+
+.director-card-head:hover {
+  background: #eeeef4;
+}
+
+.dir-emblem {
+  font-size: 14px;
+  color: #4a4a5a;
+  flex-shrink: 0;
+}
+
+.dir-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dir-role {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1d2e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dir-focus {
+  font-size: 10px;
+  color: #8a8fb0;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-top: 1px;
+}
+
+.dir-brain {
+  font-size: 10px;
+  font-family: monospace;
+  color: #6a6f8f;
+  background: #fff;
+  padding: 2px 6px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e8;
+  flex-shrink: 0;
+}
+
+.dir-toggle {
+  color: #8a8fb0;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.director-card-body {
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #2a2f48;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+/* ---------- Cross-examination ---------- */
+.cross-layout {
+  display: flex;
+  min-height: 220px;
+}
+
+.cross-tabs {
+  width: 200px;
+  flex-shrink: 0;
+  border-right: 1px solid #e6e6ea;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #fcfcfb;
+  overflow-y: auto;
+}
+
+.cross-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+
+.cross-tab:hover {
+  background: #f0f0f5;
+}
+
+.cross-tab.active {
+  background: #1a1d2e;
+  border-color: #1a1d2e;
+}
+
+.cross-tab.active .cross-tab-role {
+  color: #fff;
+}
+
+.cross-tab.active .cross-tab-brain {
+  color: #c9a227;
+}
+
+.cross-tab-role {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1a1d2e;
+}
+
+.cross-tab-brain {
+  font-size: 10px;
+  font-family: monospace;
+  color: #8a8fb0;
+}
+
+.cross-content {
+  flex: 1;
+  padding: 16px 20px;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.challenges {
+  background: #fdf5f3;
+  border: 1px solid #f5c6c0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.challenges-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #a02818;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.challenges ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.challenges li {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #4a3a35;
+}
+
+.ch-role {
+  font-weight: 700;
+  color: #a02818;
+}
+
+.ch-point {
+  color: #4a3a35;
+}
+
+.cross-text {
+  font-size: 13px;
+  line-height: 1.65;
+  color: #2a2f48;
+}
+
+/* ---------- Revised positions ---------- */
+.revisions-grid {
+  padding: 14px 16px 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+.revision-card {
+  background: #fafafa;
+  border: 1px solid #e6e6ea;
+  border-left: 5px solid #8a8fb0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.revision-card.stance-stronger { border-left-color: #2d8a4a; }
+.revision-card.stance-unchanged { border-left-color: #4a90e2; }
+.revision-card.stance-conceded { border-left-color: #c9a227; }
+.revision-card.stance-flipped { border-left-color: #a02818; }
+
+.revision-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f4f4f8;
+  border-bottom: 1px solid #e6e6ea;
+}
+
+.revision-head .dir-emblem {
+  font-size: 14px;
+  color: #4a4a5a;
+}
+
+.revision-head .dir-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.stance-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.stance-badge.stance-stronger { background: #e3f6e8; color: #1d6a3a; }
+.stance-badge.stance-unchanged { background: #e8f0ff; color: #2a5db0; }
+.stance-badge.stance-conceded { background: #fdf3d4; color: #8a6a10; }
+.stance-badge.stance-flipped { background: #fdecea; color: #a02818; }
+
+.revision-body {
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #2a2f48;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+/* ---------- Follow-up turn ---------- */
+.followup-turn .turn-banner {
+  background: #2a2f48;
+}
+
+.followup-turn .turn-banner .turn-kind {
+  background: #3a3f60;
+}
+
+@media (max-width: 720px) {
+  .director-cards,
+  .revisions-grid {
+    grid-template-columns: 1fr;
+  }
+  .cross-layout {
+    flex-direction: column;
+  }
+  .cross-tabs {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid #e6e6ea;
+  }
+  .cross-tab {
+    flex-shrink: 0;
+  }
+}
