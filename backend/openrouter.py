@@ -1,9 +1,12 @@
 """OpenRouter API client for making LLM requests."""
 
+import time
+
 import httpx
 from typing import List, Dict, Any, Optional
 from .config import OPENROUTER_API_KEY, OPENROUTER_API_URL
 from .request_context import current_api_key
+from .usage_meter import record as record_usage
 
 
 async def query_model(
@@ -30,8 +33,12 @@ async def query_model(
     payload = {
         "model": model,
         "messages": messages,
+        # Ask OpenRouter to return the exact billed cost with the response — this is the only
+        # metered engine in the Cockpit, so every call lands in the operator's usage ledger.
+        "usage": {"include": True},
     }
 
+    started = time.monotonic()
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.post(
@@ -43,6 +50,7 @@ async def query_model(
 
             data = response.json()
             message = data['choices'][0]['message']
+            record_usage(model, data.get('usage') or {}, int((time.monotonic() - started) * 1000))
 
             return {
                 'content': message.get('content'),
