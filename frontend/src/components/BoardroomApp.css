@@ -7,11 +7,13 @@
   overflow: hidden;
 }
 
-/* ── Mobile: the sidebar becomes a slide-in drawer behind a ☰ toggle ── */
+/* ── Mobile + tablet (≤1024px): the sidebar becomes a slide-in drawer behind a ☰ toggle.
+   Tablets sit between the old 720px phone breakpoint and desktop; a fixed 290px sidebar
+   crushes the stage at iPad widths, so the drawer covers them too. ── */
 .mobile-nav-toggle { display: none; }
 .nav-backdrop { display: none; }
 
-@media (max-width: 720px) {
+@media (max-width: 1024px) {
   .mobile-nav-toggle {
     display: flex;
     align-items: center;
