@@ -134,40 +134,51 @@ def sync_once() -> bool:
 
 
 def watch_loop(interval: int) -> None:
-    """Main polling loop with debounce + cooldown."""
+    """Main polling loop with debounce + cooldown.
+
+    Debounce strategy: fire when the set of changed files has been STABLE
+    (unchanged) for DEBOUNCE_SECONDS — not when it becomes empty, because a
+    modified-but-uncommitted file keeps appearing in `git status` every poll.
+    """
     log(f"autosync watcher started — repo={REPO_DIR} branch={BRANCH} "
         f"poll={interval}s debounce={DEBOUNCE_SECONDS}s "
         f"cooldown={MIN_COMMIT_INTERVAL}s")
     last_commit_time = 0.0
-    pending: set[str] = set()
-    last_change_time = 0.0
+    last_seen: set[str] | None = None  # last observed change set
+    stable_since: float = 0.0          # when the set last became stable
 
     while True:
         try:
             current = set(get_changed_files())
-            if current:
-                # new churn — reset debounce clock, accumulate pending set
-                if current != pending:
-                    pending = current
-                    last_change_time = time.time()
-                    log(f"Activity detected ({len(current)} file(s)). "
-                        f"Debouncing...")
-            elif pending:
-                # quiescent — check debounce window
-                quiet_for = time.time() - last_change_time
-                if quiet_for >= DEBOUNCE_SECONDS:
-                    cooled = (time.time() - last_commit_time) >= MIN_COMMIT_INTERVAL
-                    if cooled:
-                        files = sorted(pending)
-                        log(f"Quiescent {quiet_for:.1f}s — syncing {len(files)} file(s).")
-                        if commit_and_push(files):
-                            last_commit_time = time.time()
-                        pending.clear()
-                        last_change_time = 0.0
-                    else:
-                        remaining = MIN_COMMIT_INTERVAL - (time.time() - last_commit_time)
-                        log(f"Quiescent but cooldown active ({remaining:.0f}s remaining).")
-                        pending.clear()  # will re-detect next cycle if still dirty
+            now = time.time()
+
+            if not current:
+                # clean tree — nothing to do, reset trackers
+                last_seen = None
+                stable_since = 0.0
+            else:
+                if current != last_seen:
+                    # change set mutated — reset debounce clock
+                    last_seen = current
+                    stable_since = now
+                    log(f"Activity detected ({len(current)} file(s)). Debouncing...")
+                elif stable_since:
+                    # change set stable — has enough time elapsed?
+                    quiet_for = now - stable_since
+                    if quiet_for >= DEBOUNCE_SECONDS:
+                        cooled = (now - last_commit_time) >= MIN_COMMIT_INTERVAL
+                        if cooled:
+                            files = sorted(current)
+                            log(f"Stable {quiet_for:.1f}s — syncing {len(files)} file(s).")
+                            if commit_and_push(files):
+                                last_commit_time = now
+                            # post-commit: tree should be clean next poll
+                            last_seen = None
+                            stable_since = 0.0
+                        else:
+                            remaining = MIN_COMMIT_INTERVAL - (now - last_commit_time)
+                            log(f"Stable but cooldown active ({remaining:.0f}s remaining).")
+                            stable_since = now  # re-arm to retry after cooldown
         except KeyboardInterrupt:
             log("Watcher stopped by user (KeyboardInterrupt).")
             break
