@@ -1,0 +1,289 @@
+/* ── BoardConfigPanel ── Marama Marketing branding */
+
+.board-config {
+  background: var(--bg-mid);
+  border-bottom: 2px solid var(--mm-orange);
+  padding: 16px 28px 18px;
+  flex-shrink: 0;
+}
+
+.board-config.compact {
+  padding: 12px 28px 14px;
+}
+
+/* ── Intro top: text + controls side by side ── */
+.config-intro-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.config-intro-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.config-intro h3 {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--mm-yellow);
+  margin: 0 0 5px 0;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-family: var(--font-body);
+}
+
+.config-intro p {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+  max-width: 600px;
+}
+
+/* ── Right-side controls: counsel select + toggle btn ── */
+.config-intro-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.counsel-select-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.counsel-select-row label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.counsel-select-row select {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  background: var(--bg-light);
+  color: var(--mm-cream);
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: border-color 0.15s;
+}
+
+.counsel-select-row select:focus {
+  outline: none;
+  border-color: var(--mm-orange);
+}
+
+/* ── Seats toggle button ── */
+.seats-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.seats-toggle-btn.open {
+  background: rgba(239, 65, 36, 0.12);
+  border: 1px solid rgba(239, 65, 36, 0.4);
+  color: var(--mm-orange);
+}
+
+.seats-toggle-btn.open:hover {
+  background: rgba(239, 65, 36, 0.2);
+  border-color: var(--mm-orange);
+  box-shadow: 0 0 10px rgba(239, 65, 36, 0.25);
+}
+
+.seats-toggle-btn.closed {
+  background: rgba(239, 202, 8, 0.08);
+  border: 1px solid rgba(239, 202, 8, 0.3);
+  color: var(--mm-yellow);
+}
+
+.seats-toggle-btn.closed:hover {
+  background: rgba(239, 202, 8, 0.15);
+  border-color: var(--mm-yellow);
+  box-shadow: 0 0 10px rgba(239, 202, 8, 0.2);
+}
+
+.seats-toggle-icon {
+  font-size: 9px;
+  opacity: 0.8;
+}
+
+/* ── Collapsible table wrapper ── */
+.table-wrapper {
+  overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.3s ease, margin-top 0.3s ease;
+}
+
+.table-wrapper.table-open {
+  max-height: 1200px;
+  opacity: 1;
+  margin-top: 14px;
+}
+
+.table-wrapper.table-closed {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+  pointer-events: none;
+}
+
+/* ── Seats table ── */
+.table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.seat {
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.seat:hover { border-color: rgba(239, 65, 36, 0.3); }
+
+.chairman-seat {
+  background: rgba(239, 65, 36, 0.07);
+  border-color: rgba(239, 65, 36, 0.3);
+  border-left: 3px solid var(--mm-orange);
+}
+
+.director-seat.expanded {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(239, 202, 8, 0.25);
+}
+
+.seat-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.seat-emblem {
+  font-size: 15px;
+  color: var(--mm-yellow);
+  flex-shrink: 0;
+  width: 26px;
+  text-align: center;
+}
+
+.seat-emblem.dir {
+  color: var(--mm-orange-2);
+  font-size: 11px;
+}
+
+.seat-titles { flex: 1; min-width: 0; }
+
+.seat-role {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mm-white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chairman-seat .seat-role {
+  color: var(--mm-yellow);
+}
+
+.seat-focus {
+  font-size: 10px;
+  color: var(--mm-cream-dim);
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-style: italic;
+}
+
+.seat-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.model-select {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--mm-cream);
+  cursor: pointer;
+  font-family: var(--font-body);
+  max-width: 150px;
+  transition: border-color 0.15s;
+}
+
+.model-select:focus {
+  outline: none;
+  border-color: var(--mm-orange);
+}
+
+.expand-btn {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--border);
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-faint);
+  font-size: 13px;
+  line-height: 1;
+  padding: 0;
+  transition: all 0.12s;
+}
+
+.expand-btn:hover {
+  border-color: var(--mm-orange);
+  color: var(--mm-orange);
+  background: rgba(239, 65, 36, 0.08);
+}
+
+.seat-persona {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(239, 202, 8, 0.2);
+}
+
+.persona-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--mm-yellow);
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.seat-persona p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--mm-cream);
+  line-height: 1.65;
+  font-style: italic;
+}

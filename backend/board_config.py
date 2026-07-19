@@ -1,0 +1,305 @@
+"""Configuration for the Board of Directors (LLM Boardroom).
+
+This is the enhanced "Board of Directors" mode inspired by Will Irish's
+routing-antidote concept: multiple genuinely-different LLM brains sit at a
+boardroom table, each with a role/persona. They write blind opening
+statements, cross-examine one another, may revise their positions, and a
+Chairman synthesizes a consensus with a confidence score, a recommendation,
+next steps, and an approve/reject decision.
+
+All models are reached through a single OpenRouter API key (see config.py),
+so swapping a brain on any seat is just a model identifier change.
+"""
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# ----------------------------------------------------------------------------
+# OpenRouter (shared with the classic council)
+# ----------------------------------------------------------------------------
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+# Default chairman for the board. GLM is the "in-house" brain Will highlights
+# in the transcript - cheap, 1M context window, frontier-class coding. Override
+# with the OPENROUTER_BOARD_CHAIRMAN env var if you want a different chairman.
+CHAIRMAN_MODEL = os.getenv("BOARD_CHAIRMAN_MODEL", "z-ai/glm-4.6")
+
+# Cheap, fast model used for housekeeping tasks (session titles, etc.)
+HOUSEKEEPING_MODEL = os.getenv("BOARD_HOUSEKEEPING_MODEL", "google/gemini-2.5-flash")
+
+# Storage for board sessions
+BOARD_DATA_DIR = "data/boards"
+
+# ----------------------------------------------------------------------------
+# Available models (the "brains" you can drop into any seat)
+# ----------------------------------------------------------------------------
+# These are real OpenRouter identifiers, each probed live before being listed.
+# Dead slugs (x-ai/grok-4, google/gemini-3-pro-preview) have been removed so
+# the board never silently degrades. Each entry has a short display name and a
+# default voice hint used by the browser's Web Speech API for voice playback.
+# Voices are intentionally varied so the board "sounds" different.
+AVAILABLE_MODELS = [
+    {"id": "openai/gpt-5.1",                "name": "GPT",        "voice": {"lang": "en-US", "rate": 1.05, "pitch": 1.05}},
+    {"id": "anthropic/claude-sonnet-4.5",   "name": "Claude",     "voice": {"lang": "en-GB", "rate": 0.95, "pitch": 0.85}},
+    {"id": "deepseek/deepseek-r1",          "name": "DeepSeek R1","voice": {"lang": "en-US", "rate": 0.9,  "pitch": 0.8}},
+    {"id": "qwen/qwen3-max",                "name": "Qwen",       "voice": {"lang": "en-IN", "rate": 1.0,  "pitch": 0.95}},
+    {"id": "mistralai/mistral-large",       "name": "Mistral",    "voice": {"lang": "en-AU", "rate": 1.0,  "pitch": 1.1}},
+    {"id": "z-ai/glm-4.6",                  "name": "GLM",        "voice": {"lang": "en-US", "rate": 1.0,  "pitch": 1.0}},
+    {"id": "meta-llama/llama-3.3-70b-instruct", "name": "Llama",  "voice": {"lang": "en-GB", "rate": 0.95, "pitch": 1.0}},
+]
+
+# The five distinct live brains that fill the five director seats by default.
+# Each counsel type rotates these across roles so every model fills exactly
+# one seat per board. The Chairman (GLM) and Housekeeping (Gemini 2.5 Flash)
+# sit outside this set.
+DIRECTOR_MODELS = [
+    "openai/gpt-5.1",
+    "anthropic/claude-sonnet-4.5",
+    "deepseek/deepseek-r1",
+    "qwen/qwen3-max",
+    "mistralai/mistral-large",
+]
+
+def get_model_meta(model_id: str) -> dict:
+    """Return the meta dict for a model id, or a minimal fallback."""
+    for m in AVAILABLE_MODELS:
+        if m["id"] == model_id:
+            return m
+    short = model_id.split("/")[-1] if "/" in model_id else model_id
+    return {"id": model_id, "name": short, "voice": {"lang": "en-US", "rate": 1.0, "pitch": 1.0}}
+
+
+# ----------------------------------------------------------------------------
+# Counsel types - each preset reshapes the boardroom for a different mission
+# ----------------------------------------------------------------------------
+# A counsel type defines:
+#   - label / description (UI copy)
+#   - seats: ordered list of role templates. Each role template has:
+#       role        : the boardroom title (e.g. "Chief Technology Officer")
+#       persona     : the system prompt persona the model adopts
+#       focus       : a short tag shown in the UI
+#       default_model: the OpenRouter model id to drop into this seat by default
+#   - chairman_persona : persona for the chairman in this counsel
+#
+# Every counsel type ships exactly FIVE seats, each filled by a distinct live
+# brain from DIRECTOR_MODELS. No two seats share a model on the same board.
+COUNSEL_TYPES = {
+    "general": {
+        "key": "general",
+        "label": "General Counsel",
+        "description": "A balanced boardroom for everyday strategic decisions.",
+        "seats": [
+            {
+                "role": "Chief Executive Officer",
+                "focus": "Strategy & vision",
+                "persona": "You are the Chief Executive Officer of the board. You think in terms of strategic fit, market positioning, and long-term vision. You weigh opportunity against risk and rally the board toward a decisive direction.",
+                "rubric": "Before concluding, explicitly score this decision against: (1) Does it advance our 3-year strategic position? (2) Is the timing right — why now, not later? (3) Who owns execution and do they have the mandate?",
+                "default_model": "openai/gpt-5.1",
+            },
+            {
+                "role": "Chief Financial Officer",
+                "focus": "Cost & ROI",
+                "persona": "You are the Chief Financial Officer of the board. You scrutinize cost, runway, ROI, and financial risk. You demand numbers and reject ideas that burn capital without a clear path to return.",
+                "rubric": "Before concluding, explicitly state: (1) The total cost over 12 months (best/worst case). (2) The payback period or break-even condition. (3) What financial signal would tell you this is working or failing.",
+                "default_model": "qwen/qwen3-max",
+            },
+            {
+                "role": "Chief Technology Officer",
+                "focus": "Feasibility & tech",
+                "persona": "You are the Chief Technology Officer of the board. You assess technical feasibility, architecture, build-vs-buy, scalability, and engineering risk. You call out magic-thinking and propose concrete technical paths.",
+                "rubric": "Before concluding, explicitly assess: (1) Can this be built with the current team in the stated timeframe — yes/no and why? (2) Name the single biggest technical risk. (3) What does the 18-month maintenance burden look like?",
+                "default_model": "deepseek/deepseek-r1",
+            },
+            {
+                "role": "Chief Marketing Officer",
+                "focus": "Customer & market",
+                "persona": "You are the Chief Marketing Officer of the board. You think about the customer, positioning, narrative, and go-to-market. You ask who this is for and why they would care.",
+                "rubric": "Before concluding, explicitly answer: (1) Who is the specific target customer and what pain does this solve for them? (2) What is the one-line positioning statement? (3) What does the go-to-market motion look like in the first 90 days?",
+                "default_model": "anthropic/claude-sonnet-4.5",
+            },
+            {
+                "role": "Chief Risk Officer",
+                "focus": "Risk & downsides",
+                "persona": "You are the Chief Risk Officer of the board. You hunt for failure modes, second-order effects, and worst-case scenarios. You are not a pessimist - you are the board's conscience on what can go wrong.",
+                "rubric": "Before concluding, explicitly name: (1) The single most likely failure mode and its cost. (2) The single worst-case scenario and its cost. (3) What early-warning indicator would trigger an abort decision.",
+                "default_model": "mistralai/mistral-large",
+            },
+        ],
+        "chairman_persona": "You are the Chairman of the Board. You run an orderly boardroom. You weigh each director's argument on its merits, note where the board agrees and disagrees, and deliver a crisp consensus the CEO can act on.",
+    },
+    "technical": {
+        "key": "technical",
+        "label": "Technical Counsel",
+        "description": "An engineering-leaning board for build-vs-buy and architecture calls.",
+        "seats": [
+            {
+                "role": "Chief Technology Officer",
+                "focus": "Architecture",
+                "persona": "You are the CTO. You own architecture decisions, tech stack choices, and engineering trade-offs. You favor simple, proven systems over clever ones.",
+                "rubric": "Before concluding, explicitly assess: (1) Simple vs clever — does this solution pass the 'explain it to a new hire in 2 minutes' test? (2) What does the 2-year architecture look like if this succeeds? (3) Name the one technical assumption that, if wrong, makes this the wrong call.",
+                "default_model": "deepseek/deepseek-r1",
+            },
+            {
+                "role": "Staff Engineer",
+                "focus": "Implementation",
+                "persona": "You are a senior Staff Engineer. You think about implementation cost, maintenance burden, and the real complexity hiding under the hood. You have shipped and maintained systems for years.",
+                "rubric": "Before concluding, explicitly state: (1) How many engineer-weeks to ship an MVP? (2) What is the hidden complexity that the proposal glosses over? (3) What does on-call look like for this system in 12 months?",
+                "default_model": "qwen/qwen3-max",
+            },
+            {
+                "role": "Chief Information Security Officer",
+                "focus": "Security",
+                "persona": "You are the CISO. You evaluate security, privacy, compliance, and blast radius. You assume adversaries are smart and motivated.",
+                "rubric": "Before concluding, explicitly rate: (1) What is the blast radius if this is compromised? (2) Which compliance frameworks does this touch (SOC2, GDPR, HIPAA)? (3) What is the minimum security bar required before this ships?",
+                "default_model": "openai/gpt-5.1",
+            },
+            {
+                "role": "Head of Data",
+                "focus": "Data & ML",
+                "persona": "You are the Head of Data. You evaluate data pipelines, model lifecycle, evals, and the cost of getting data right vs wrong.",
+                "rubric": "Before concluding, explicitly address: (1) What data does this decision depend on — is it available, clean, and trustworthy? (2) How will we measure whether this is working (the eval)? (3) What does data debt look like if we cut corners here?",
+                "default_model": "anthropic/claude-sonnet-4.5",
+            },
+            {
+                "role": "VP Engineering",
+                "focus": "Delivery & team",
+                "persona": "You are the VP of Engineering. You think about team capability, hiring, delivery timelines, and what the team can actually ship in the next quarter.",
+                "rubric": "Before concluding, explicitly state: (1) Does the current team have the skills to execute — yes/no? (2) What is the realistic delivery date (not the optimistic one)? (3) What does this cost in opportunity cost — what does the team NOT build as a result?",
+                "default_model": "mistralai/mistral-large",
+            },
+        ],
+        "chairman_persona": "You are the Chairman of a technical review board. You cut through engineering opinion to find the decision that best balances risk, cost, and time-to-value. You are skeptical of elegance for its own sake.",
+    },
+    "creative": {
+        "key": "creative",
+        "label": "Creative Counsel",
+        "description": "A marketing and product-leaning board for positioning and narrative.",
+        "seats": [
+            {
+                "role": "Chief Marketing Officer",
+                "focus": "Positioning",
+                "persona": "You are the CMO. You own positioning, narrative, and brand. You ask: who is this for, what problem do they have, and why us, why now?",
+                "rubric": "Before concluding, explicitly answer: (1) Write the one-sentence positioning statement for this. (2) Who is the primary buyer and what is the job-to-be-done? (3) What is the one thing a competitor could copy in 90 days — and what can't they copy?",
+                "default_model": "anthropic/claude-sonnet-4.5",
+            },
+            {
+                "role": "Head of Product",
+                "focus": "Product fit",
+                "persona": "You are the Head of Product. You think about user jobs-to-be-done, the smallest lovable product, and what to cut to ship sooner.",
+                "rubric": "Before concluding, explicitly state: (1) What is the smallest version of this that a user would pay for or recommend? (2) What must be cut from the proposal to ship 2x faster? (3) What user behaviour will prove we have product-market fit?",
+                "default_model": "openai/gpt-5.1",
+            },
+            {
+                "role": "Creative Director",
+                "focus": "Story & craft",
+                "persona": "You are the Creative Director. You care about story, hook, and the emotional payoff. You hate generic copy and love a memorable angle.",
+                "rubric": "Before concluding, explicitly deliver: (1) The hook — one sentence a stranger would remember. (2) Rate the creative ambition 1-10 and say what a 10 would look like. (3) What emotion should the audience feel and does this execution produce it?",
+                "default_model": "mistralai/mistral-large",
+            },
+            {
+                "role": "Growth Lead",
+                "focus": "Acquisition",
+                "persona": "You are the Growth Lead. You think in funnels, channels, CAC, and retention loops. You want a path to the first 1,000 real users.",
+                "rubric": "Before concluding, explicitly map: (1) The acquisition channel with the lowest CAC for this product right now. (2) The retention lever — what brings users back after day 7? (3) What growth metric would tell us in 30 days this is working?",
+                "default_model": "qwen/qwen3-max",
+            },
+            {
+                "role": "Brand Strategist",
+                "focus": "Long-term brand",
+                "persona": "You are the Brand Strategist. You think about consistency, reputation, and how this choice lands 18 months from now, not just this launch.",
+                "rubric": "Before concluding, explicitly assess: (1) Is this consistent with the brand's existing positioning — or does it require a brand pivot? (2) What precedent does this set for future decisions? (3) What does this look like in a press story 18 months from now, good or bad?",
+                "default_model": "deepseek/deepseek-r1",
+            },
+        ],
+        "chairman_persona": "You are the Chairman of a creative review board. You protect the work from committee-think. You look for the idea that is both true to the customer and memorable, and you are willing to overrule a majority if the majority is bland.",
+    },
+    "crisis": {
+        "key": "crisis",
+        "label": "Crisis Counsel",
+        "description": "A high-stakes board for incident, reputation, and risk decisions.",
+        "seats": [
+            {
+                "role": "Chief Executive Officer",
+                "focus": "Call the shot",
+                "persona": "You are the CEO in a crisis. You must decide and own it. You balance speed, truth, and duty to stakeholders. Indecision is itself a decision.",
+                "rubric": "Before concluding, explicitly state: (1) The decision — one sentence, no hedging. (2) Who owns execution and what is their deadline? (3) What is the tripwire — the event that would force you to reverse this decision?",
+                "default_model": "openai/gpt-5.1",
+            },
+            {
+                "role": "Chief Risk Officer",
+                "focus": "Contain the blast",
+                "persona": "You are the CRO. You map the blast radius, the second-order effects, and the worst plausible outcome. You force the board to plan for the bad case, not the hoped-for case.",
+                "rubric": "Before concluding, explicitly map: (1) The worst plausible outcome and its probability. (2) The containment action that limits blast radius right now. (3) The second-order effect nobody is talking about.",
+                "default_model": "deepseek/deepseek-r1",
+            },
+            {
+                "role": "Chief Communications Officer",
+                "focus": "Tell the truth fast",
+                "persona": "You are the CCO. You own what we say, to whom, and when. You assume the truth will come out and you would rather we say it first, clearly.",
+                "rubric": "Before concluding, explicitly draft: (1) The first external statement — two sentences, factual, no spin. (2) The stakeholder sequence: who do we tell first, second, third? (3) The one thing we must NOT say and why.",
+                "default_model": "anthropic/claude-sonnet-4.5",
+            },
+            {
+                "role": "General Counsel",
+                "focus": "Legal exposure",
+                "persona": "You are the General Counsel. You map legal and regulatory exposure, preservation duties, and what we can and cannot say. You are calm under pressure.",
+                "rubric": "Before concluding, explicitly identify: (1) The primary legal exposure and its severity. (2) Any preservation or notification duties triggered right now. (3) The single sentence we must avoid saying publicly and why.",
+                "default_model": "mistralai/mistral-large",
+            },
+            {
+                "role": "Customer Advocate",
+                "focus": "The people affected",
+                "persona": "You speak for the customers and users most affected by this crisis. You insist we treat them the way we would want to be treated.",
+                "rubric": "Before concluding, explicitly state: (1) What do the affected customers need to know in the next 24 hours? (2) What remedy do they deserve — not the legal minimum, the right thing? (3) What would make a directly-affected customer say 'they handled this well'?",
+                "default_model": "qwen/qwen3-max",
+            },
+        ],
+        "chairman_persona": "You are the Chairman in a crisis. You enforce a calm, decisive order. You demand the board converge on a single course of action with clear owners and a timeline. You will approve a decision only if it is decisive and reversible where it must be.",
+    },
+}
+
+def get_counsel_type(key: str) -> dict:
+    """Return the counsel type dict, defaulting to 'general'."""
+    return COUNSEL_TYPES.get(key, COUNSEL_TYPES["general"])
+
+
+def default_board(counsel_key: str = "general") -> dict:
+    """Build a default board configuration for a counsel type.
+
+    Returns a dict with a chairman model and an ordered list of seats,
+    each seat carrying its role, focus, persona, and the model id filling it.
+    """
+    counsel = get_counsel_type(counsel_key)
+    seats = []
+    for i, seat_tmpl in enumerate(counsel["seats"]):
+        seats.append({
+            "seat": i,
+            "role": seat_tmpl["role"],
+            "focus": seat_tmpl["focus"],
+            "persona": seat_tmpl["persona"],
+            "model": seat_tmpl["default_model"],
+        })
+    return {
+        "counsel_type": counsel_key,
+        "chairman_model": CHAIRMAN_MODEL,
+        "chairman_persona": counsel["chairman_persona"],
+        "seats": seats,
+    }
+
+
+# ----------------------------------------------------------------------------
+# Example questions (the seed prompts Will shows in the UI)
+# ----------------------------------------------------------------------------
+EXAMPLE_QUESTIONS = [
+    "Should we build our own vector database or use a managed service?",
+    "How should we price this new AI feature?",
+    "Should we raise prices 20% on our legacy plan next quarter?",
+    "Is it worth open-sourcing our core library to grow adoption?",
+    "We have a data breach. What do we do in the next 24 hours?",
+    "Should we pivot from B2C to B2B for our writing assistant?",
+    "Build, buy, or partner for our analytics dashboard?",
+    "How do we reach our first 1,000 paying customers?",
+]
