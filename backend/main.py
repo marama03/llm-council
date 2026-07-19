@@ -9,6 +9,7 @@ import uuid
 import json
 import asyncio
 
+from .request_context import request_api_key, request_namespace
 from . import storage
 from . import board_storage
 from .council import (
@@ -37,6 +38,13 @@ from .board_config import (
 )
 
 app = FastAPI(title="LLM Council & Board of Directors API")
+
+
+@app.middleware("http")
+async def _cockpit_context(request, call_next):
+    request_api_key.set(request.headers.get("x-openrouter-key", ""))
+    request_namespace.set(request.headers.get("x-council-ns", ""))
+    return await call_next(request)
 
 # Enable CORS for local development + sandbox preview
 app.add_middleware(

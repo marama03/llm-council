@@ -17,14 +17,20 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 
 from .board_config import BOARD_DATA_DIR, default_board
+from .request_context import current_namespace
+
+
+def _data_dir() -> str:
+    ns = current_namespace()
+    return os.path.join(BOARD_DATA_DIR, ns) if ns else BOARD_DATA_DIR
 
 
 def _ensure_dir():
-    Path(BOARD_DATA_DIR).mkdir(parents=True, exist_ok=True)
+    Path(_data_dir()).mkdir(parents=True, exist_ok=True)
 
 
 def _path(session_id: str) -> str:
-    return os.path.join(BOARD_DATA_DIR, f"{session_id}.json")
+    return os.path.join(_data_dir(), f"{session_id}.json")
 
 
 def create_session(
@@ -66,13 +72,13 @@ def save_session(session: Dict[str, Any]):
 def list_sessions() -> List[Dict[str, Any]]:
     _ensure_dir()
     out = []
-    if not os.path.isdir(BOARD_DATA_DIR):
+    if not os.path.isdir(_data_dir()):
         return out
-    for fn in os.listdir(BOARD_DATA_DIR):
+    for fn in os.listdir(_data_dir()):
         if not fn.endswith(".json"):
             continue
         try:
-            with open(os.path.join(BOARD_DATA_DIR, fn), "r") as f:
+            with open(os.path.join(_data_dir(), fn), "r") as f:
                 data = json.load(f)
             out.append({
                 "id": data["id"],

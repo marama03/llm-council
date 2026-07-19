@@ -3,6 +3,7 @@
 import httpx
 from typing import List, Dict, Any, Optional
 from .config import OPENROUTER_API_KEY, OPENROUTER_API_URL
+from .request_context import current_api_key
 
 
 async def query_model(
@@ -22,7 +23,7 @@ async def query_model(
         Response dict with 'content' and optional 'reasoning_details', or None if failed
     """
     headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Authorization": f"Bearer {current_api_key(OPENROUTER_API_KEY)}",
         "Content-Type": "application/json",
     }
 

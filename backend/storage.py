@@ -6,16 +6,22 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 from .config import DATA_DIR
+from .request_context import current_namespace
+
+
+def _data_dir() -> str:
+    ns = current_namespace()
+    return os.path.join(DATA_DIR, ns) if ns else DATA_DIR
 
 
 def ensure_data_dir():
     """Ensure the data directory exists."""
-    Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
+    Path(_data_dir()).mkdir(parents=True, exist_ok=True)
 
 
 def get_conversation_path(conversation_id: str) -> str:
     """Get the file path for a conversation."""
-    return os.path.join(DATA_DIR, f"{conversation_id}.json")
+    return os.path.join(_data_dir(), f"{conversation_id}.json")
 
 
 def create_conversation(conversation_id: str) -> Dict[str, Any]:
@@ -88,9 +94,9 @@ def list_conversations() -> List[Dict[str, Any]]:
     ensure_data_dir()
 
     conversations = []
-    for filename in os.listdir(DATA_DIR):
+    for filename in os.listdir(_data_dir()):
         if filename.endswith('.json'):
-            path = os.path.join(DATA_DIR, filename)
+            path = os.path.join(_data_dir(), filename)
             with open(path, 'r') as f:
                 data = json.load(f)
                 # Return metadata only
