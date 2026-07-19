@@ -114,7 +114,7 @@ export default function ChairmanConsensus({ consensus, followup = false }) {
             <div className="cc-section-label">Points of Agreement</div>
             <ul className="cc-bullets agree">
               {consensus.points_of_agreement.map((p, i) => (
-                <li key={i}>{p}</li>
+                <li key={i}><ReactMarkdown>{p}</ReactMarkdown></li>
               ))}
             </ul>
           </div>
@@ -124,7 +124,7 @@ export default function ChairmanConsensus({ consensus, followup = false }) {
             <div className="cc-section-label">Points of Disagreement</div>
             <ul className="cc-bullets disagree">
               {consensus.points_of_disagreement.map((p, i) => (
-                <li key={i}>{p}</li>
+                <li key={i}><ReactMarkdown>{p}</ReactMarkdown></li>
               ))}
             </ul>
           </div>

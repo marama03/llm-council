@@ -230,6 +230,7 @@
 }
 
 .next-steps-list li p { margin: 0; }
+.cc-bullets li p { margin: 0; display: inline; }
 
 /* ── Two-col: agreement vs disagreement ── */
 .cc-two-col {
