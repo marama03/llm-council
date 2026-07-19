@@ -164,6 +164,14 @@
   gap: 12px;
   width: 100%;
   max-width: 880px;
+  /* Flex-item min-width:auto trap: without this the grid's min-content (3 full tracks) overrides
+     width:100% and the cards row overflows the phone viewport. */
+  min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .empty-cta-cards { grid-template-columns: 1fr; }
+  .boardroom-empty { padding: 40px 18px 56px; }
 }
 
 .empty-cta-card {
