@@ -45,7 +45,7 @@ def create_conversation(conversation_id: str) -> Dict[str, Any]:
 
     # Save to file
     path = get_conversation_path(conversation_id)
-    with open(path, 'w') as f:
+    with open(path, 'w', encoding='utf-8') as f:
         json.dump(conversation, f, indent=2)
 
     return conversation
@@ -66,7 +66,7 @@ def get_conversation(conversation_id: str) -> Optional[Dict[str, Any]]:
     if not os.path.exists(path):
         return None
 
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 
@@ -80,7 +80,7 @@ def save_conversation(conversation: Dict[str, Any]):
     ensure_data_dir()
 
     path = get_conversation_path(conversation['id'])
-    with open(path, 'w') as f:
+    with open(path, 'w', encoding='utf-8') as f:
         json.dump(conversation, f, indent=2)
 
 
@@ -97,7 +97,7 @@ def list_conversations() -> List[Dict[str, Any]]:
     for filename in os.listdir(_data_dir()):
         if filename.endswith('.json'):
             path = os.path.join(_data_dir(), filename)
-            with open(path, 'r') as f:
+            with open(path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 # Return metadata only
                 conversations.append({

@@ -50,7 +50,7 @@ def create_session(
         "board": board,
         "turns": [],
     }
-    with open(_path(session_id), "w") as f:
+    with open(_path(session_id), "w", encoding="utf-8") as f:
         json.dump(session, f, indent=2)
     return session
 
@@ -59,13 +59,13 @@ def get_session(session_id: str) -> Optional[Dict[str, Any]]:
     path = _path(session_id)
     if not os.path.exists(path):
         return None
-    with open(path, "r") as f:
+    with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def save_session(session: Dict[str, Any]):
     _ensure_dir()
-    with open(_path(session["id"]), "w") as f:
+    with open(_path(session["id"]), "w", encoding="utf-8") as f:
         json.dump(session, f, indent=2)
 
 
@@ -78,7 +78,7 @@ def list_sessions() -> List[Dict[str, Any]]:
         if not fn.endswith(".json"):
             continue
         try:
-            with open(os.path.join(_data_dir(), fn), "r") as f:
+            with open(os.path.join(_data_dir(), fn), "r", encoding="utf-8") as f:
                 data = json.load(f)
             out.append({
                 "id": data["id"],

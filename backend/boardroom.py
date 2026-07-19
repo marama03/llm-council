@@ -474,7 +474,9 @@ async def stage4_chairman_consensus(
         f"{trigger_section}"
         f"POINTS OF AGREEMENT:\n<markdown bullet list of where the board converged>\n\n"
         f"POINTS OF DISAGREEMENT:\n<markdown bullet list of where the board diverged; name the roles>\n\n"
-        f"Do not add any prose outside these sections. Do not mention that you are an AI."
+        f"Write the section headers as PLAIN TEXT exactly as shown — no markdown "
+        f"'#' headings, no bold. Do not add any prose outside these sections. "
+        f"Do not mention that you are an AI."
     )
 
     messages = [
@@ -581,11 +583,22 @@ async def followup_turn(
         f"New question:\n\n\"\"\"\n{question}\n\"\"\"\n\n"
         f"Directors' replies:\n\n{replies_text}\n\n"
         f"Board convergence score (independently computed, not by you): {followup_confidence}/100\n\n"
-        f"Deliver the board's consensus on this follow-up using the SAME "
-        f"section structure as before (CONSENSUS, CONFIDENCE, DECISION, "
-        f"RECOMMENDATION, NEXT STEPS, POINTS OF AGREEMENT, POINTS OF "
-        f"DISAGREEMENT). Be explicit about how this follow-up updates the "
-        f"prior consensus, if at all."
+        f"Deliver the board's consensus on this follow-up. Be explicit about how "
+        f"it updates the prior consensus, if at all. Your output MUST follow "
+        f"this exact structure with these exact section headers in this order:\n\n"
+        f"CONSENSUS:\n<2-4 sentences stating the board's agreed outcome>\n\n"
+        f"CONFIDENCE: {followup_confidence}\n\n"
+        f"DECISION: <exactly one of: APPROVE, APPROVE WITH CONDITIONS, REJECT, NO CONSENSUS>\n\n"
+        f"RECOMMENDATION:\n<3-6 sentences with the concrete recommendation the CEO should act on>\n\n"
+        f"NEXT STEPS:\n<3 to 6 concrete next steps as a markdown bullet list, each owned and time-bound>\n\n"
+        f"TRIGGER CONDITIONS:\n<REQUIRED when the directors are split: the specific "
+        f"evidence or event that would cause the board to reverse this decision — "
+        f"tied to the dissenters' core argument. Omit this section when the board converged.>\n\n"
+        f"POINTS OF AGREEMENT:\n<markdown bullet list of where the board converged>\n\n"
+        f"POINTS OF DISAGREEMENT:\n<markdown bullet list of where the board diverged; name the roles>\n\n"
+        f"Write the section headers as PLAIN TEXT exactly as shown — no markdown "
+        f"'#' headings, no bold. Do not add any prose outside these sections. "
+        f"Do not mention that you are an AI."
     )
     chair_messages = [
         {"role": "system", "content": _chairman_system_prompt(counsel)},
@@ -713,20 +726,44 @@ def _parse_challenges(text: str) -> List[Dict[str, str]]:
     return deduped[:12]
 
 
+_KNOWN_HEADERS = (
+    "CONSENSUS", "CONFIDENCE", "DECISION", "RECOMMENDATION",
+    "NEXT STEPS", "TRIGGER CONDITIONS", "POINTS OF AGREEMENT", "POINTS OF DISAGREEMENT",
+)
+
+
+def _normalize_chair_headers(raw: str) -> str:
+    """Rewrite markdown-decorated section headers to the canonical 'HEADER:' form.
+
+    GLM (and most chat models) drift into '### CONSENSUS' / '### **CONSENSUS**' /
+    '**DECISION:** APPROVE' the moment a prompt doesn't restate the exact format —
+    which is precisely what happened on follow-up turns (2026-07-19, 'Cockpit
+    pricing' board): the Chair delivered a full consensus, the parser matched
+    nothing, and the UI showed an empty card with a default NO CONSENSUS badge.
+    Normalizing here makes the parser immune to decoration on every path.
+    """
+    names = "|".join(_KNOWN_HEADERS)
+    deco = r"[#>\s*_]*"
+    # Header alone on its line (with or without a trailing colon).
+    raw = re.sub(rf"(?im)^{deco}({names}){deco}:?{deco}$", r"\1:", raw)
+    # Header with content on the same line ('**DECISION:** APPROVE').
+    raw = re.sub(rf"(?im)^{deco}({names}){deco}:[\s*_]*", r"\1: ", raw)
+    return raw
+
+
 def _parse_consensus(raw: str) -> Dict[str, Any]:
     """Parse the Chairman's structured consensus output.
 
     Tolerant of minor formatting variance; falls back to splitting the raw
     text when a section header is missing.
     """
+    raw = _normalize_chair_headers(raw)
+
     def section(name: str, aliases: List[str] = None) -> str:
         aliases = aliases or [name]
         # Match "NAME:" possibly followed by newline, then content up to the
         # next known section header or end of text.
-        known = [
-            "CONSENSUS", "CONFIDENCE", "DECISION", "RECOMMENDATION",
-            "NEXT STEPS", "TRIGGER CONDITIONS", "POINTS OF AGREEMENT", "POINTS OF DISAGREEMENT",
-        ]
+        known = list(_KNOWN_HEADERS)
         other = [k for k in known if k not in [a.upper() for a in aliases]]
         for alias in aliases:
             pat = re.compile(
@@ -754,19 +791,31 @@ def _parse_consensus(raw: str) -> Dict[str, Any]:
         if m:
             confidence = max(0, min(100, int(m.group(0))))
 
-    # Decision -> enum-ish
-    decision = "NO CONSENSUS"
+    # Decision -> enum-ish. "NO CONSENSUS" is a board VERDICT — it must never be
+    # the fallback for "we couldn't read the Chair's output". Honest states:
+    #   UNPARSED     — nothing extracted at all; the raw text IS the decision.
+    #   UNCLASSIFIED — sections parsed but the Chair wrote a prose decision
+    #                  instead of the enum; the prose is kept in decision_note.
+    # Never guess a verdict the Chair didn't state.
+    decision = "UNPARSED"
+    decision_note = ""
     if decision_raw:
         d = decision_raw.upper().strip()
         for cand in ("APPROVE WITH CONDITIONS", "APPROVE", "REJECT", "NO CONSENSUS"):
             if cand in d:
                 decision = cand
                 break
+        else:
+            decision = "UNCLASSIFIED"
+            decision_note = decision_raw.strip()
+    elif consensus_text or recommendation:
+        decision = "UNCLASSIFIED"
 
     return {
         "consensus": consensus_text,
         "confidence": confidence,
         "decision": decision,
+        "decision_note": decision_note,
         "recommendation": recommendation,
         "next_steps": _parse_bullets(next_steps_raw),
         "trigger_conditions": trigger_raw,

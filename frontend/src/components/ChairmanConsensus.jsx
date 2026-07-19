@@ -14,13 +14,20 @@ const DECISION_META = {
   'APPROVE WITH CONDITIONS': { label: 'Approve with Conditions', tone: 'conditions' },
   REJECT: { label: 'Reject', tone: 'reject' },
   'NO CONSENSUS': { label: 'No Consensus', tone: 'noconsensus' },
+  // Parse failure, NOT a board verdict — the Chair spoke but the sections
+  // couldn't be extracted. The raw output below IS the decision; show it open.
+  UNPARSED: { label: 'Unstructured — see full output', tone: 'noconsensus' },
+  // The Chair decided in prose instead of the enum — verdict is in decision_note.
+  UNCLASSIFIED: { label: 'Decided — see detail', tone: 'conditions' },
 };
 
 export default function ChairmanConsensus({ consensus, followup = false }) {
-  const [showRaw, setShowRaw] = useState(false);
+  const unparsed = consensus?.decision === 'UNPARSED'
+    || (consensus && !consensus.failed && !consensus.consensus && !consensus.recommendation);
+  const [showRaw, setShowRaw] = useState(unparsed);
   if (!consensus) return null;
 
-  const decision = DECISION_META[consensus.decision] || DECISION_META['NO CONSENSUS'];
+  const decision = (unparsed ? DECISION_META.UNPARSED : DECISION_META[consensus.decision]) || DECISION_META.UNPARSED;
   const confidence = typeof consensus.confidence === 'number' ? consensus.confidence : null;
   const scorers = consensus.confidence_scorers || [];
   const splitInfo = consensus.split_info || null;
@@ -75,6 +82,15 @@ export default function ChairmanConsensus({ consensus, followup = false }) {
           <div className="cc-section-label">Consensus</div>
           <div className="markdown-content">
             <ReactMarkdown>{consensus.consensus}</ReactMarkdown>
+          </div>
+        </div>
+      )}
+
+      {consensus.decision === 'UNCLASSIFIED' && consensus.decision_note && (
+        <div className="cc-section cc-decision-note">
+          <div className="cc-section-label">Decision Detail</div>
+          <div className="markdown-content">
+            <ReactMarkdown>{consensus.decision_note}</ReactMarkdown>
           </div>
         </div>
       )}
@@ -135,9 +151,13 @@ export default function ChairmanConsensus({ consensus, followup = false }) {
         <button onClick={() => setShowRaw((v) => !v)}>
           {showRaw ? '− Hide raw chairman output' : '+ Show raw chairman output'}
         </button>
-        {showRaw && (
+        {showRaw && (unparsed ? (
+          <div className="cc-raw markdown-content" style={{ whiteSpace: 'normal' }}>
+            <ReactMarkdown>{consensus.raw}</ReactMarkdown>
+          </div>
+        ) : (
           <pre className="cc-raw">{consensus.raw}</pre>
-        )}
+        ))}
       </div>
 
       {consensus.failed && (
