@@ -13,6 +13,7 @@ export default function CouncilApp() {
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [currentConversation, setCurrentConversation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);   // mobile drawer
 
   useEffect(() => {
     loadConversations();
@@ -120,12 +121,14 @@ export default function CouncilApp() {
   };
 
   return (
-    <div className="boardroom-app">
+    <div className={'boardroom-app' + (navOpen ? ' nav-open' : '')}>
+      <button className="mobile-nav-toggle" onClick={() => setNavOpen((v) => !v)} title="Conversations">☰</button>
+      <div className="nav-backdrop" onClick={() => setNavOpen(false)} />
       <Sidebar
         conversations={conversations}
         currentConversationId={currentConversationId}
-        onSelectConversation={setCurrentConversationId}
-        onNewConversation={handleNewConversation}
+        onSelectConversation={(id) => { setCurrentConversationId(id); setNavOpen(false); }}
+        onNewConversation={() => { handleNewConversation(); setNavOpen(false); }}
         variant="council"
       />
       <ChatInterface

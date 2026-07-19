@@ -20,6 +20,7 @@ export default function BoardroomApp() {
 
   // "Pending" counsel type — chosen on welcome screen but no session created yet
   const [pendingCounsel, setPendingCounsel] = useState(null);
+  const [navOpen, setNavOpen] = useState(false);   // mobile drawer
 
   const [counselTypes, setCounselTypes] = useState([]);
   const [models, setModels] = useState([]);
@@ -281,15 +282,17 @@ export default function BoardroomApp() {
   };
 
   return (
-    <div className="boardroom-app">
+    <div className={'boardroom-app' + (navOpen ? ' nav-open' : '')}>
+      <button className="mobile-nav-toggle" onClick={() => setNavOpen((v) => !v)} title="Sessions">☰</button>
+      <div className="nav-backdrop" onClick={() => setNavOpen(false)} />
       <BoardSidebar
         sessions={sessions}
         currentSessionId={currentSessionId}
         pendingCounsel={pendingCounsel}
-        onSelectSession={setCurrentSessionId}
-        onNewSession={handleNewSession}
+        onSelectSession={(id) => { setCurrentSessionId(id); setNavOpen(false); }}
+        onNewSession={(k) => { handleNewSession(k); setNavOpen(false); }}
         onDeleteSession={handleDeleteSession}
-        onGoHome={handleGoHome}
+        onGoHome={() => { handleGoHome(); setNavOpen(false); }}
         counselTypes={counselTypes}
       />
       <BoardroomStage
