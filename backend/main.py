@@ -10,6 +10,7 @@ import json
 import asyncio
 
 from .request_context import request_api_key, request_namespace
+from .local_files import resolve_paths as resolve_local_paths
 from . import storage
 from . import board_storage
 from .council import (
@@ -346,8 +347,30 @@ async def convene_board_stream(session_id: str, request: ConveneRequest):
     attachments = [a.model_dump() for a in request.attachments]
     is_first_turn = len(session.get("turns", [])) == 0
 
+    # A question may point at a file on this machine. Read it and hand it to the board, or refuse
+    # loudly. What must never happen again: the path is passed through as a literal string, no model
+    # can open it, and the board rules anyway on a document it never saw.
+    # See local_files.py for the security fencing on which paths are readable.
+    resolved, notices, file_errors = resolve_local_paths(question)
+    if resolved:
+        attachments = resolved + attachments
+        question = (
+            question
+            + "\n\n[The file(s) referenced above are attached in full. Read the attached text; "
+            + "do not speculate about their contents.]"
+        )
+
     async def event_generator():
         try:
+            # A referenced file we could not read is a hard stop, not a warning. Convening without
+            # it produces a confident verdict on invented facts, which is worse than no verdict.
+            if file_errors:
+                detail = "; ".join(file_errors)
+                yield f"data: {json.dumps({'type': 'error', 'message': 'Could not read a file referenced in the question, so the board was not convened. ' + detail})}\n\n"
+                return
+            if notices:
+                yield f"data: {json.dumps({'type': 'attachments_resolved', 'data': notices})}\n\n"
+
             # Kick off title generation in parallel for the first turn
             title_task = None
             if is_first_turn:
