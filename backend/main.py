@@ -448,8 +448,30 @@ async def followup_board_stream(session_id: str, request: FollowupRequest):
             detail="Cannot follow up before the board has been convened at least once.",
         )
 
+    # A follow-up sees only a COMPACT SUMMARY of the previous turn, never that turn's attachments.
+    # So a board that ruled on an attached document loses it the moment you press them on the ruling,
+    # and answers the hard follow-up from a paragraph of context. That is the same "confident answer,
+    # missing source" failure the convene path had, just later in the conversation and harder to spot.
+    # Resolving paths here lets a follow-up re-attach what it needs; unreadable paths stop the turn.
+    followup_files, notices, file_errors = resolve_local_paths(question)
+    if followup_files:
+        attached = "\n\n".join(
+            f"--- BEGIN {a['name']} ---\n{a['text']}\n--- END {a['name']} ---" for a in followup_files
+        )
+        question = (
+            f"{question}\n\nThe file(s) referenced above are reproduced in full below. "
+            f"Read them; do not speculate about their contents.\n\n{attached}"
+        )
+
     async def event_generator():
         try:
+            if file_errors:
+                detail = "; ".join(file_errors)
+                yield f"data: {json.dumps({'type': 'error', 'message': 'Could not read a file referenced in the follow-up, so the board was not re-convened. ' + detail})}\n\n"
+                return
+            if notices:
+                yield f"data: {json.dumps({'type': 'attachments_resolved', 'data': notices})}\n\n"
+
             counsel = get_counsel_type(board.get("counsel_type", "general"))
 
             yield f"data: {json.dumps({'type': 'directors_start'})}\n\n"
